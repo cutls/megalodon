@@ -1,6 +1,5 @@
-/// <reference types="node" />
 import WS from 'ws';
-import { EventEmitter } from 'events';
+import EventEmitter from 'EventEmitter';
 import { WebSocketInterface } from '../megalodon';
 import { ProxyConfig } from '../proxy_config';
 export default class WebSocket extends EventEmitter implements WebSocketInterface {

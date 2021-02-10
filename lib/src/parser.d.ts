@@ -1,5 +1,4 @@
-/// <reference types="node" />
-import { EventEmitter } from 'events';
+import EventEmitter from "react-native-eventemitter";
 export declare class Parser extends EventEmitter {
     private message;
     constructor();

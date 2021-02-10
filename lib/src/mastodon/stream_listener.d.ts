@@ -1,5 +1,4 @@
-/// <reference types="node" />
-import { EventEmitter } from 'events';
+import EventEmitter from 'EventEmitter';
 import { Parser } from '../parser';
 import { ProxyConfig } from '../proxy_config';
 import { StreamListenerInterface } from '../megalodon';
