@@ -1,4 +1,4 @@
-
+// @ts-nocheck
 export type ProxyConfig = {
   host: string
   port: number
