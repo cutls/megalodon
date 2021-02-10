@@ -1,4 +1,4 @@
-import { EventEmitter } from 'events'
+import EventEmitter from 'EventEmitter'
 import axios, { CancelTokenSource, AxiosRequestConfig } from 'axios'
 import httpAdapter from 'axios/lib/adapters/http'
 import { Parser } from '../parser'
