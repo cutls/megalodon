@@ -1,6 +1,6 @@
 import WS from 'ws'
 import dayjs, { Dayjs } from 'dayjs'
-import EventEmitter from 'EventEmitter'
+import { EventEmitter } from 'react-native'
 
 import proxyAgent, { ProxyConfig } from '../proxy_config'
 import { WebSocketInterface } from '../megalodon'

@@ -1,4 +1,4 @@
-import EventEmitter from 'EventEmitter';
+import { EventEmitter } from 'react-native';
 import { Parser } from '../parser';
 import { ProxyConfig } from '../proxy_config';
 import { StreamListenerInterface } from '../megalodon';

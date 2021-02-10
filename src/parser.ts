@@ -1,4 +1,4 @@
-import EventEmitter from "react-native-eventemitter"
+import { EventEmitter } from 'react-native'
 import Entity from './entity'
 
 /**

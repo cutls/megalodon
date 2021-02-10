@@ -1,5 +1,5 @@
 import WS from 'ws';
-import EventEmitter from 'EventEmitter';
+import { EventEmitter } from 'react-native';
 import { WebSocketInterface } from '../megalodon';
 import { ProxyConfig } from '../proxy_config';
 export default class WebSocket extends EventEmitter implements WebSocketInterface {

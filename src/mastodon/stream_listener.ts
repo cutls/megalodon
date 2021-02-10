@@ -1,4 +1,4 @@
-import EventEmitter from 'EventEmitter'
+import { EventEmitter } from 'react-native'
 import axios, { CancelTokenSource, AxiosRequestConfig } from 'axios'
 import httpAdapter from 'axios/lib/adapters/http'
 import { Parser } from '../parser'
