@@ -1,5 +1,3 @@
-import { OAuth2 } from 'oauth'
-
 import PleromaAPI from './pleroma/api_client'
 import WebSocket from './pleroma/web_socket'
 import { MegalodonInterface, StreamListenerInterface, NoImplementedError } from './megalodon'
@@ -103,13 +101,7 @@ export default class Pleroma implements MegalodonInterface {
     const scope = options.scope || DEFAULT_SCOPE
     const redirect_uri = options.redirect_uri || NO_REDIRECT
     return new Promise(resolve => {
-      const oauth = new OAuth2(clientId, clientSecret, this.baseUrl, undefined, '/oauth/token')
-      const url = oauth.getAuthorizeUrl({
-        redirect_uri: redirect_uri,
-        response_type: 'code',
-        client_id: clientId,
-        scope: scope.join(' ')
-      })
+      const url = `https://${this.baseUrl}/oauth/authorize?client_id=${clientId}&client_secret=${clientSecret}&response_type=code&scope=${scope.join('+')}&redirect_uri=${redirect_uri}`
       resolve(url)
     })
   }
