@@ -160,7 +160,7 @@ describe('api_client', () => {
         }
       ]
 
-      const reactions = MisskeyAPI.Converter.reactions(misskeyReactions)
+      const reactions = MisskeyAPI.Converter.reactions(misskeyReactions, 'misskey.io', {})
       expect(reactions).toEqual([
         {
           count: 3,

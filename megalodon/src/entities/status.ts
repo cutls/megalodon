@@ -6,9 +6,16 @@
 /// <reference path="emoji.ts" />
 /// <reference path="card.ts" />
 /// <reference path="poll.ts" />
-/// <reference path="reaction.ts" />
 
 namespace Entity {
+  type Reaction = {
+    count: number
+    me: boolean
+    name: string
+    accounts?: Array<Account>
+    url?: string
+    static_url?: string
+  }
   export type Status = {
     id: string
     uri: string

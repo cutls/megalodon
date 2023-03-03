@@ -281,26 +281,28 @@ namespace MisskeyAPI {
     }
     export const mapReactions = (host: string, r: { [key: string]: number }, myReaction: string, emojiData: MisskeyEntity.Emoji[] | MisskeyEntity.EmojiKeyValue): Array<MegalodonEntity.Reaction> => {
       if (isEmojiArr(emojiData)) {
-        return emojiData.map((e) => {return {
+        return emojiData.map((e) => { return {
           count: 0, me: false, name: e.name, url: e.url, static_url: e.url
         }})
       }
       return Object.keys(r).map(key => {
+        const shortcode = key.replace(/[:@.]/g, '')
+        const isCustomEmoji = shortcode !== key
         if (myReaction && key === myReaction) {
           return {
             count: r[key],
             me: true,
-            name: key,
-            url: emojiData[key] || `https://${host}/${key.replace(/[:@.]/g, '')}.webp`,
-            static_url: emojiData[key] || `https://${host}/${key.replace(/[:@.]/g, '')}.webp`
+            name: shortcode,
+            url: isCustomEmoji ? emojiData[key] || `https://${host}/emoji/${shortcode}.webp` : undefined,
+            static_url: isCustomEmoji ? emojiData[key] || `https://${host}/emoji/${shortcode}.webp` : undefined
           }
         }
         return {
           count: r[key],
           me: false,
-          name: key,
-          url: emojiData[key] || `https://${host}/${key.replace(/[:@.]/g, '')}.webp`,
-          static_url: emojiData[key] || `https://${host}/${key.replace(/[:@.]/g, '')}.webp`
+          name: shortcode,
+          url: isCustomEmoji ? emojiData[key] || `https://${host}/emoji/${shortcode}.webp` : undefined,
+          static_url: isCustomEmoji ? emojiData[key] || `https://${host}/emoji/${shortcode}.webp` : undefined
         }
       })
     }
@@ -313,6 +315,8 @@ namespace MisskeyAPI {
         }})
       }
       for (const e of r) {
+        const shortcode = e.type.replace(/[:@.]/g, '')
+        const isCustomEmoji = shortcode !== e.type
         const i = result.findIndex(res => res.name === e.type)
         if (i >= 0) {
           result[i].count++
@@ -320,9 +324,9 @@ namespace MisskeyAPI {
           result.push({
             count: 1,
             me: false,
-            name: e.type,
-            url: emojiData[e.type] || `https://${host}/${e.type.replace(/[:@.]/g, '')}.webp`,
-            static_url: emojiData[e.type] || `https://${host}/${e.type.replace(/[:@.]/g, '')}.webp`
+            name: shortcode,
+            url: isCustomEmoji ? emojiData[shortcode] || `https://${host}/emoji/${shortcode}.webp` : undefined,
+            static_url: isCustomEmoji ? emojiData[shortcode] || `https://${host}/emoji/${shortcode}.webp` : undefined
           })
         }
       }
@@ -551,8 +555,10 @@ namespace MisskeyAPI {
       let bodyParams = params
       if (this.accessToken) {
         if (params instanceof FormData) {
+          bodyParams.set('limit', parseInt(bodyParams.get('limit'), 10))
           bodyParams.append('i', this.accessToken)
         } else {
+          params.limit = parseInt(params.limit, 10)
           bodyParams = Object.assign(params, {
             i: this.accessToken
           })
