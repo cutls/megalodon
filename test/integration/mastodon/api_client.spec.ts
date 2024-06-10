@@ -72,7 +72,7 @@ const status: Entity.Status = {
   pinned: null,
   emoji_reactions: [],
   bookmarked: false,
-  quote: null
+  quote: false
 }
 ;(axios.CancelToken.source as any).mockImplementation(() => {
   return {

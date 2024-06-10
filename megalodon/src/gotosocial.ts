@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-types */
 import { OAuth2Client } from '@badgateway/oauth2-client'
 import FormData from 'form-data'
 import dayjs from 'dayjs'
@@ -23,7 +24,7 @@ export default class Gotosocial implements MegalodonInterface {
    * @param userAgent UserAgent is specified in header on request.
    */
   constructor(baseUrl: string, accessToken: string | null = null, userAgent: string | null = DEFAULT_UA) {
-    let token: string = ''
+    let token = ''
     if (accessToken) {
       token = accessToken
     }
@@ -657,7 +658,7 @@ export default class Gotosocial implements MegalodonInterface {
     })
   }
 
-  public async muteAccount(_id: string, _notifications: boolean = true): Promise<Response<Entity.Relationship>> {
+  public async muteAccount(_id: string, _notifications = true): Promise<Response<Entity.Relationship>> {
     return new Promise((_, reject) => {
       const err = new NotImplementedError('Gotosocial does not support this method')
       reject(err)

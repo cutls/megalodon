@@ -24,8 +24,8 @@ export class Parser extends EventEmitter {
     chunk = this.message
 
     const size: number = chunk.length
-    let start: number = 0
-    let offset: number = 0
+    let start = 0
+    let offset = 0
     let curr: string | undefined
     let next: string | undefined
 

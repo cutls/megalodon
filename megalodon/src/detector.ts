@@ -47,7 +47,7 @@ type Metadata = {
  * @param proxyConfig Proxy setting, or set false if don't use proxy.
  * @return SNS name.
  */
-export const detector = async (url: string): Promise<'mastodon' | 'pleroma' | 'friendica' | 'firefish' | 'gotosocial'> => {
+export const detector = async (url: string): Promise<'mastodon' | 'pleroma' | 'friendica' | 'firefish' | 'gotosocial' | 'misskey'> => {
   const options: AxiosRequestConfig = {
     timeout: 20000
   }
@@ -121,6 +121,8 @@ export const detector = async (url: string): Promise<'mastodon' | 'pleroma' | 'f
           return 'firefish'
         case 'gotosocial':
           return 'gotosocial'
+        case 'misskey':
+          return 'misskey'
         default:
           if (res.data.metadata.upstream?.name && res.data.metadata.upstream.name === 'mastodon') {
             return 'mastodon'

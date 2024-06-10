@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-types */
 import { OAuth2Client } from '@badgateway/oauth2-client'
 import FormData from 'form-data'
 
@@ -22,7 +23,7 @@ export default class Pleroma implements MegalodonInterface {
    * @param userAgent UserAgent is specified in header on request.
    */
   constructor(baseUrl: string, accessToken: string | null = null, userAgent: string | null = DEFAULT_UA) {
-    let token: string = ''
+    let token = ''
     if (accessToken) {
       token = accessToken
     }
@@ -671,7 +672,7 @@ export default class Pleroma implements MegalodonInterface {
    * @param notifications Mute notifications in addition to statuses.
    * @return Relationship
    */
-  public async muteAccount(id: string, notifications: boolean = true): Promise<Response<Entity.Relationship>> {
+  public async muteAccount(id: string, notifications = true): Promise<Response<Entity.Relationship>> {
     return this.client
       .post<PleromaAPI.Entity.Relationship>(`/api/v1/accounts/${id}/mute`, {
         notifications: notifications
