@@ -1,14 +1,13 @@
 import axios, { AxiosResponse, AxiosRequestConfig } from 'axios'
 import objectAssignDeep from 'object-assign-deep'
 
-import WebSocket from './web_socket'
+import Streaming from './web_socket'
 import Response from '../response'
 import { RequestCanceledError } from '../cancel'
-import proxyAgent, { ProxyConfig } from '../proxy_config'
 import { NO_REDIRECT, DEFAULT_SCOPE, DEFAULT_UA } from '../default'
 import MastodonEntity from './entity'
 import MegalodonEntity from '../entity'
-import NotificationType from '../notification'
+import NotificationType, { UnknownNotificationTypeError } from '../notification'
 import MastodonNotificationType from './notification'
 
 namespace MastodonAPI {
@@ -25,7 +24,7 @@ namespace MastodonAPI {
     postForm<T = any>(path: string, params?: any, headers?: { [key: string]: string }): Promise<Response<T>>
     del<T = any>(path: string, params?: any, headers?: { [key: string]: string }): Promise<Response<T>>
     cancel(): void
-    socket(path: string, stream: string, params?: string): WebSocket
+    socket(url: string, stream: string, params?: string): Streaming
   }
 
   /**
@@ -42,24 +41,16 @@ namespace MastodonAPI {
     private baseUrl: string
     private userAgent: string
     private abortController: AbortController
-    private proxyConfig: ProxyConfig | false = false
 
     /**
      * @param baseUrl hostname or base URL
      * @param accessToken access token from OAuth2 authorization
      * @param userAgent UserAgent is specified in header on request.
-     * @param proxyConfig Proxy setting, or set false if don't use proxy.
      */
-    constructor(
-      baseUrl: string,
-      accessToken: string | null = null,
-      userAgent: string = DEFAULT_UA,
-      proxyConfig: ProxyConfig | false = false
-    ) {
+    constructor(baseUrl: string, accessToken: string | null = null, userAgent: string = DEFAULT_UA) {
       this.accessToken = accessToken
       this.baseUrl = baseUrl
       this.userAgent = userAgent
-      this.proxyConfig = proxyConfig
       this.abortController = new AbortController()
       axios.defaults.signal = this.abortController.signal
     }
@@ -87,12 +78,6 @@ namespace MastodonAPI {
           headers: {
             Authorization: `Bearer ${this.accessToken}`
           }
-        })
-      }
-      if (this.proxyConfig) {
-        options = Object.assign(options, {
-          httpAgent: proxyAgent(this.proxyConfig),
-          httpsAgent: proxyAgent(this.proxyConfig)
         })
       }
       return axios
@@ -134,12 +119,6 @@ namespace MastodonAPI {
           }
         })
       }
-      if (this.proxyConfig) {
-        options = Object.assign(options, {
-          httpAgent: proxyAgent(this.proxyConfig),
-          httpsAgent: proxyAgent(this.proxyConfig)
-        })
-      }
       return axios
         .put<T>(this.baseUrl + path, params, options)
         .catch((err: Error) => {
@@ -177,12 +156,6 @@ namespace MastodonAPI {
           headers: {
             Authorization: `Bearer ${this.accessToken}`
           }
-        })
-      }
-      if (this.proxyConfig) {
-        options = Object.assign(options, {
-          httpAgent: proxyAgent(this.proxyConfig),
-          httpsAgent: proxyAgent(this.proxyConfig)
         })
       }
       return axios
@@ -224,12 +197,6 @@ namespace MastodonAPI {
           }
         })
       }
-      if (this.proxyConfig) {
-        options = Object.assign(options, {
-          httpAgent: proxyAgent(this.proxyConfig),
-          httpsAgent: proxyAgent(this.proxyConfig)
-        })
-      }
       return axios
         .patch<T>(this.baseUrl + path, params, options)
         .catch((err: Error) => {
@@ -267,12 +234,6 @@ namespace MastodonAPI {
           headers: {
             Authorization: `Bearer ${this.accessToken}`
           }
-        })
-      }
-      if (this.proxyConfig) {
-        options = Object.assign(options, {
-          httpAgent: proxyAgent(this.proxyConfig),
-          httpsAgent: proxyAgent(this.proxyConfig)
         })
       }
       return axios
@@ -314,12 +275,6 @@ namespace MastodonAPI {
           }
         })
       }
-      if (this.proxyConfig) {
-        options = Object.assign(options, {
-          httpAgent: proxyAgent(this.proxyConfig),
-          httpsAgent: proxyAgent(this.proxyConfig)
-        })
-      }
       return axios.post<T>(this.baseUrl + path, params, options).then((resp: AxiosResponse<T>) => {
         const res: Response<T> = {
           data: resp.data,
@@ -348,12 +303,6 @@ namespace MastodonAPI {
           headers: {
             Authorization: `Bearer ${this.accessToken}`
           }
-        })
-      }
-      if (this.proxyConfig) {
-        options = Object.assign(options, {
-          httpAgent: proxyAgent(this.proxyConfig),
-          httpsAgent: proxyAgent(this.proxyConfig)
         })
       }
       return axios.postForm<T>(this.baseUrl + path, params, options).then((resp: AxiosResponse<T>) => {
@@ -387,12 +336,6 @@ namespace MastodonAPI {
           }
         })
       }
-      if (this.proxyConfig) {
-        options = Object.assign(options, {
-          httpAgent: proxyAgent(this.proxyConfig),
-          httpsAgent: proxyAgent(this.proxyConfig)
-        })
-      }
       return axios
         .delete(this.baseUrl + path, options)
         .catch((err: Error) => {
@@ -424,19 +367,17 @@ namespace MastodonAPI {
     /**
      * Get connection and receive websocket connection for Pleroma API.
      *
-     * @param path relative path from baseUrl: normally it is `/streaming`.
+     * @param url Streaming url.
      * @param stream Stream name, please refer: https://git.pleroma.social/pleroma/pleroma/blob/develop/lib/pleroma/web/mastodon_api/mastodon_socket.ex#L19-28
      * @returns WebSocket, which inherits from EventEmitter
      */
-    public socket(path: string, stream: string, params?: string): WebSocket {
+    public socket(url: string, stream: string, params?: string): Streaming {
       if (!this.accessToken) {
         throw new Error('accessToken is required')
       }
-      const url = this.baseUrl + path
-      const streaming = new WebSocket(url, stream, params, this.accessToken, this.userAgent, this.proxyConfig)
-      process.nextTick(() => {
-        streaming.start()
-      })
+      const streaming = new Streaming(url, stream, params, this.accessToken, this.userAgent)
+
+      streaming.start()
       return streaming
     }
   }
@@ -444,6 +385,7 @@ namespace MastodonAPI {
   export namespace Entity {
     export type Account = MastodonEntity.Account
     export type Activity = MastodonEntity.Activity
+    export type Announcement = MastodonEntity.Announcement
     export type Application = MastodonEntity.Application
     export type AsyncAttachment = MegalodonEntity.AsyncAttachment
     export type Attachment = MastodonEntity.Attachment
@@ -468,18 +410,22 @@ namespace MastodonAPI {
     export type Relationship = MastodonEntity.Relationship
     export type Report = MastodonEntity.Report
     export type Results = MastodonEntity.Results
+    export type Role = MastodonEntity.Role
     export type ScheduledStatus = MastodonEntity.ScheduledStatus
     export type Source = MastodonEntity.Source
     export type Stats = MastodonEntity.Stats
     export type Status = MastodonEntity.Status
     export type StatusParams = MastodonEntity.StatusParams
+    export type StatusSource = MastodonEntity.StatusSource
     export type Tag = MastodonEntity.Tag
     export type Token = MastodonEntity.Token
     export type URLs = MastodonEntity.URLs
   }
 
   export namespace Converter {
-    export const encodeNotificationType = (t: MegalodonEntity.NotificationType): MastodonEntity.NotificationType => {
+    export const encodeNotificationType = (
+      t: MegalodonEntity.NotificationType
+    ): MastodonEntity.NotificationType | UnknownNotificationTypeError => {
       switch (t) {
         case NotificationType.Follow:
           return MastodonNotificationType.Follow
@@ -495,12 +441,20 @@ namespace MastodonAPI {
           return MastodonNotificationType.Status
         case NotificationType.PollExpired:
           return MastodonNotificationType.Poll
+        case NotificationType.Update:
+          return MastodonNotificationType.Update
+        case NotificationType.AdminSignup:
+          return MastodonNotificationType.AdminSignup
+        case NotificationType.AdminReport:
+          return MastodonNotificationType.AdminReport
         default:
-          return t
+          return new UnknownNotificationTypeError()
       }
     }
 
-    export const decodeNotificationType = (t: MastodonEntity.NotificationType): MegalodonEntity.NotificationType => {
+    export const decodeNotificationType = (
+      t: MastodonEntity.NotificationType
+    ): MegalodonEntity.NotificationType | UnknownNotificationTypeError => {
       switch (t) {
         case MastodonNotificationType.Follow:
           return NotificationType.Follow
@@ -516,13 +470,20 @@ namespace MastodonAPI {
           return NotificationType.Status
         case MastodonNotificationType.Poll:
           return NotificationType.PollExpired
+        case MastodonNotificationType.Update:
+          return NotificationType.Update
+        case MastodonNotificationType.AdminSignup:
+          return NotificationType.AdminSignup
+        case MastodonNotificationType.AdminReport:
+          return NotificationType.AdminReport
         default:
-          return t
+          return new UnknownNotificationTypeError()
       }
     }
 
     export const account = (a: Entity.Account): MegalodonEntity.Account => a
     export const activity = (a: Entity.Activity): MegalodonEntity.Activity => a
+    export const announcement = (a: Entity.Announcement): MegalodonEntity.Announcement => a
     export const application = (a: Entity.Application): MegalodonEntity.Application => a
     export const attachment = (a: Entity.Attachment): MegalodonEntity.Attachment => a
     export const async_attachment = (a: Entity.AsyncAttachment) => {
@@ -544,12 +505,12 @@ namespace MastodonAPI {
     }
     export const card = (c: Entity.Card): MegalodonEntity.Card => c
     export const context = (c: Entity.Context): MegalodonEntity.Context => ({
-      ancestors: c.ancestors.map(a => status(a)),
-      descendants: c.descendants.map(d => status(d))
+      ancestors: Array.isArray(c.ancestors) ? c.ancestors.map(a => status(a)) : [],
+      descendants: Array.isArray(c.descendants) ? c.descendants.map(d => status(d)) : []
     })
     export const conversation = (c: Entity.Conversation): MegalodonEntity.Conversation => ({
       id: c.id,
-      accounts: c.accounts.map(a => account(a)),
+      accounts: Array.isArray(c.accounts) ? c.accounts.map(a => account(a)) : [],
       last_status: c.last_status ? status(c.last_status) : null,
       unread: c.unread
     })
@@ -561,23 +522,25 @@ namespace MastodonAPI {
     export const identity_proof = (i: Entity.IdentityProof): MegalodonEntity.IdentityProof => i
     export const instance = (i: Entity.Instance): MegalodonEntity.Instance => i
     export const list = (l: Entity.List): MegalodonEntity.List => l
-    export const marker = (m: Entity.Marker): MegalodonEntity.Marker => m
+    export const marker = (m: Entity.Marker | Record<never, never>): MegalodonEntity.Marker | Record<never, never> => m
     export const mention = (m: Entity.Mention): MegalodonEntity.Mention => m
-    export const notification = (n: Entity.Notification): MegalodonEntity.Notification => {
+    export const notification = (n: Entity.Notification): MegalodonEntity.Notification | UnknownNotificationTypeError => {
+      const notificationType = decodeNotificationType(n.type)
+      if (notificationType instanceof UnknownNotificationTypeError) return notificationType
       if (n.status) {
         return {
           account: account(n.account),
           created_at: n.created_at,
           id: n.id,
           status: status(n.status),
-          type: decodeNotificationType(n.type)
+          type: notificationType
         }
       } else {
         return {
           account: account(n.account),
           created_at: n.created_at,
           id: n.id,
-          type: decodeNotificationType(n.type)
+          type: notificationType
         }
       }
     }
@@ -588,9 +551,9 @@ namespace MastodonAPI {
     export const relationship = (r: Entity.Relationship): MegalodonEntity.Relationship => r
     export const report = (r: Entity.Report): MegalodonEntity.Report => r
     export const results = (r: Entity.Results): MegalodonEntity.Results => ({
-      accounts: r.accounts.map(a => account(a)),
-      statuses: r.statuses.map(s => status(s)),
-      hashtags: r.hashtags.map(h => tag(h))
+      accounts: Array.isArray(r.accounts) ? r.accounts.map(a => account(a)) : [],
+      statuses: Array.isArray(r.statuses) ? r.statuses.map(s => status(s)) : [],
+      hashtags: Array.isArray(r.hashtags) ? r.hashtags.map(h => tag(h)) : []
     })
     export const scheduled_status = (s: Entity.ScheduledStatus): MegalodonEntity.ScheduledStatus => s
     export const source = (s: Entity.Source): MegalodonEntity.Source => s
@@ -606,7 +569,8 @@ namespace MastodonAPI {
       content: s.content,
       plain_content: null,
       created_at: s.created_at,
-      emojis: s.emojis.map(e => emoji(e)),
+      edited_at: s.edited_at,
+      emojis: Array.isArray(s.emojis) ? s.emojis.map(e => emoji(e)) : [],
       replies_count: s.replies_count,
       reblogs_count: s.reblogs_count,
       favourites_count: s.favourites_count,
@@ -616,9 +580,9 @@ namespace MastodonAPI {
       sensitive: s.sensitive,
       spoiler_text: s.spoiler_text,
       visibility: s.visibility,
-      media_attachments: s.media_attachments.map(m => attachment(m)),
-      mentions: s.mentions.map(m => mention(m)),
-      tags: s.tags.map(t => tag(t)),
+      media_attachments: Array.isArray(s.media_attachments) ? s.media_attachments.map(m => attachment(m)) : [],
+      mentions: Array.isArray(s.mentions) ? s.mentions.map(m => mention(m)) : [],
+      tags: s.tags,
       card: s.card ? card(s.card) : null,
       poll: s.poll ? poll(s.poll) : null,
       application: s.application ? application(s.application) : null,
@@ -627,9 +591,10 @@ namespace MastodonAPI {
       emoji_reactions: [],
       bookmarked: s.bookmarked ? s.bookmarked : false,
       // Now quote is supported only fedibird.com.
-      quote: s.quote ? status(s.quote) : null
+      quote: s.quote !== undefined && s.quote !== null
     })
     export const status_params = (s: Entity.StatusParams): MegalodonEntity.StatusParams => s
+    export const status_source = (s: Entity.StatusSource): MegalodonEntity.StatusSource => s
     export const tag = (t: Entity.Tag): MegalodonEntity.Tag => t
     export const token = (t: Entity.Token): MegalodonEntity.Token => t
     export const urls = (u: Entity.URLs): MegalodonEntity.URLs => u

@@ -3,17 +3,18 @@
   "version": "4.0.0",
   "private": true,
   "scripts": {
-    "build": "tsc -p ./"
+    "build": "tsc -p ./",
+    "lint": "eslint --ext .js,.ts src"
   },
   "author": "h3poteto",
   "license": "MIT",
   "dependencies": {
     "@cutls/megalodon": "5.1.6",
     "megalodon": "*",
-    "typescript": "4.9.4"
+    "typescript": "5.4.5"
   },
   "devDependencies": {
-    "@types/node": "^18.11.18",
-    "log4js": "^6.7.1"
+    "@types/node": "^20.12.7",
+    "log4js": "^6.9.1"
   }
 }

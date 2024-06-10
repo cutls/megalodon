@@ -1,41 +1,43 @@
-/// <reference path="account.ts" />
-/// <reference path="urls.ts" />
-/// <reference path="stats.ts" />
+import { URLs } from './urls'
+import { Stats } from './stats'
 
-namespace PleromaEntity {
-  export type Instance = {
-    uri: string
-    title: string
-    description: string
-    email: string
-    version: string
-    thumbnail: string | null
-    urls: URLs
-    stats: Stats
-    languages: Array<string>
-    contact_account: Account | null
-    max_toot_chars?: number
-    registrations?: boolean
-    configuration?: {
-      statuses: {
-        max_characters: number
-        max_media_attachments: number
-        characters_reserved_per_url: number
+export type Instance = {
+  uri: string
+  title: string
+  description: string
+  email: string
+  version: string
+  thumbnail: string | null
+  urls: URLs
+  stats: Stats
+  languages: Array<string>
+  registrations: boolean
+  approval_required: boolean
+  max_toot_chars: number
+  max_media_attachments?: number
+  pleroma: {
+    metadata: {
+      account_activation_required: boolean
+      birthday_min_age: number
+      birthday_required: boolean
+      features: Array<string>
+      federation: {
+        enabled: boolean
+        exclusions: boolean
       }
-      media_attachments: {
-        supported_mime_types: Array<string>
-        image_size_limit: number
-        image_matrix_limit: number
-        video_size_limit: number
-        video_frame_limit: number
-        video_matrix_limit: number
+      fields_limits: {
+        max_fields: number
+        max_remote_fields: number
+        name_length: number
+        value_length: number
       }
-      polls: {
-        max_options: number
-        max_characters_per_option: number
-        min_expiration: number
-        max_expiration: number
-      }
+      post_formats: Array<string>
     }
+  }
+  poll_limits: {
+    max_expiration: number
+    min_expiration: number
+    max_option_chars: number
+    max_options: number
   }
 }

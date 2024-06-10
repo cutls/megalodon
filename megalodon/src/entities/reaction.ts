@@ -1,13 +1,11 @@
-/// <reference path="account.ts" />
+import { Account } from './account'
 
-namespace Entity {
-    export type Reaction = {
-      count: number
-      me: boolean
-      name: string
-      accounts?: Array<Account>
-      url?: string
-      static_url?: string
-    }
-  }
-  
+export type Reaction = {
+  count: number
+  me: boolean
+  name: string
+  url?: string
+  static_url?: string
+  accounts?: Array<Account>
+  account_ids?: Array<string>
+}

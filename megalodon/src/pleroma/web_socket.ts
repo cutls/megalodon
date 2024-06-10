@@ -1,10 +1,11 @@
-import WS from 'ws'
+import WS from 'isomorphic-ws'
 import dayjs, { Dayjs } from 'dayjs'
 import { EventEmitter } from 'events'
 
-import proxyAgent, { ProxyConfig } from '../proxy_config'
 import { WebSocketInterface } from '../megalodon'
 import PleromaAPI from './api_client'
+import { UnknownNotificationTypeError } from '../notification'
+import { isBrowser } from '../default'
 
 /**
  * WebSocket
@@ -17,7 +18,6 @@ export default class WebSocket extends EventEmitter implements WebSocketInterfac
   public params: string | null
   public parser: Parser
   public headers: { [key: string]: string }
-  public proxyConfig: ProxyConfig | false = false
   private _accessToken: string
   private _reconnectInterval: number
   private _reconnectMaxAttempts: number
@@ -25,24 +25,16 @@ export default class WebSocket extends EventEmitter implements WebSocketInterfac
   private _connectionClosed: boolean
   private _client: WS | null
   private _pongReceivedTimestamp: Dayjs
-  private _heartbeatInterval: number = 60000
-  private _pongWaiting: boolean = false
+  private _heartbeatInterval = 60000
+  private _pongWaiting = false
 
   /**
    * @param url Full url of websocket: e.g. https://pleroma.io/api/v1/streaming
    * @param stream Stream name, please refer: https://git.pleroma.social/pleroma/pleroma/blob/develop/lib/pleroma/web/mastodon_api/mastodon_socket.ex#L19-28
    * @param accessToken The access token.
    * @param userAgent The specified User Agent.
-   * @param proxyConfig Proxy setting, or set false if don't use proxy.
    */
-  constructor(
-    url: string,
-    stream: string,
-    params: string | undefined,
-    accessToken: string,
-    userAgent: string,
-    proxyConfig: ProxyConfig | false = false
-  ) {
+  constructor(url: string, stream: string, params: string | undefined, accessToken: string, userAgent: string) {
     super()
     this.url = url
     this.stream = stream
@@ -55,7 +47,6 @@ export default class WebSocket extends EventEmitter implements WebSocketInterfac
     this.headers = {
       'User-Agent': userAgent
     }
-    this.proxyConfig = proxyConfig
     this._accessToken = accessToken
     this._reconnectInterval = 10000
     this._reconnectMaxAttempts = Infinity
@@ -80,7 +71,7 @@ export default class WebSocket extends EventEmitter implements WebSocketInterfac
   private _startWebSocketConnection() {
     this._resetConnection()
     this._setupParser()
-    this._client = this._connect(this.url, this.stream, this.params, this._accessToken, this.headers, this.proxyConfig)
+    this._client = this._connect(this.url, this.stream, this.params, this._accessToken, this.headers)
     this._bindSocket(this._client)
   }
 
@@ -99,7 +90,7 @@ export default class WebSocket extends EventEmitter implements WebSocketInterfac
   private _resetConnection() {
     if (this._client) {
       this._client.close(1000)
-      this._client.removeAllListeners()
+      this._clearBinding()
       this._client = null
     }
 
@@ -132,11 +123,15 @@ export default class WebSocket extends EventEmitter implements WebSocketInterfac
         if (this._client) {
           // In reconnect, we want to close the connection immediately,
           // because recoonect is necessary when some problems occur.
-          this._client.terminate()
+          if (isBrowser()) {
+            this._client.close()
+          } else {
+            this._client.terminate()
+          }
         }
         // Call connect methods
         console.log('Reconnecting')
-        this._client = this._connect(this.url, this.stream, this.params, this._accessToken, this.headers, this.proxyConfig)
+        this._client = this._connect(this.url, this.stream, this.params, this._accessToken, this.headers)
         this._bindSocket(this._client)
       }
     }, this._reconnectInterval)
@@ -147,17 +142,9 @@ export default class WebSocket extends EventEmitter implements WebSocketInterfac
    * @param stream The specified stream name.
    * @param accessToken Access token.
    * @param headers The specified headers.
-   * @param proxyConfig Proxy setting, or set false if don't use proxy.
    * @return A WebSocket instance.
    */
-  private _connect(
-    url: string,
-    stream: string,
-    params: string | null,
-    accessToken: string,
-    headers: { [key: string]: string },
-    proxyConfig: ProxyConfig | false
-  ): WS {
+  private _connect(url: string, stream: string, params: string | null, accessToken: string, headers: { [key: string]: string }): WS {
     const parameter: Array<string> = [`stream=${stream}`]
 
     if (params) {
@@ -167,25 +154,27 @@ export default class WebSocket extends EventEmitter implements WebSocketInterfac
     if (accessToken !== null) {
       parameter.push(`access_token=${accessToken}`)
     }
-    const requestURL: string = `${url}/?${parameter.join('&')}`
-    let options: WS.ClientOptions = {
-      headers: headers
-    }
-    if (proxyConfig) {
-      options = Object.assign(options, {
-        agent: proxyAgent(proxyConfig)
-      })
-    }
+    const requestURL = `${url}?${parameter.join('&')}`
+    if (isBrowser()) {
+      // This is browser.
+      // We can't pass options when browser: https://github.com/heineiuo/isomorphic-ws#limitations
+      const cli = new WS(requestURL)
+      return cli
+    } else {
+      const options: WS.ClientOptions = {
+        headers: headers
+      }
 
-    const cli: WS = new WS(requestURL, options)
-    return cli
+      const cli: WS = new WS(requestURL, options)
+      return cli
+    }
   }
 
   /**
    * Clear binding event for web socket client.
    */
   private _clearBinding() {
-    if (this._client) {
+    if (this._client && !isBrowser()) {
       this._client.removeAllListeners('close')
       this._client.removeAllListeners('pong')
       this._client.removeAllListeners('open')
@@ -199,38 +188,43 @@ export default class WebSocket extends EventEmitter implements WebSocketInterfac
    * @param client A WebSocket instance.
    */
   private _bindSocket(client: WS) {
-    client.on('close', (code: number, _reason: Buffer) => {
+    client.onclose = event => {
       // Refer the code: https://tools.ietf.org/html/rfc6455#section-7.4
-      if (code === 1000) {
+      if (event.code === 1000) {
         this.emit('close', {})
       } else {
-        console.log(`Closed connection with ${code}`)
+        console.log(`Closed connection with ${event.code}`)
         // If already called close method, it does not retry.
         if (!this._connectionClosed) {
           this._reconnect()
         }
       }
-    })
-    client.on('pong', () => {
-      this._pongWaiting = false
-      this.emit('pong', {})
-      this._pongReceivedTimestamp = dayjs()
-      // It is required to anonymous function since get this scope in checkAlive.
-      setTimeout(() => this._checkAlive(this._pongReceivedTimestamp), this._heartbeatInterval)
-    })
-    client.on('open', () => {
+    }
+    client.onopen = _event => {
       this.emit('connect', {})
-      // Call first ping event.
-      setTimeout(() => {
-        client.ping('')
-      }, 10000)
-    })
-    client.on('message', (data: WS.Data, isBinary: boolean) => {
-      this.parser.parse(data, isBinary)
-    })
-    client.on('error', (err: Error) => {
-      this.emit('error', err)
-    })
+      if (!isBrowser()) {
+        // Call first ping event.
+        setTimeout(() => {
+          client.ping('')
+        }, 10000)
+      }
+    }
+    client.onmessage = event => {
+      this.parser.parse(event)
+    }
+    client.onerror = event => {
+      this.emit('error', event.error)
+    }
+
+    if (!isBrowser()) {
+      client.on('pong', () => {
+        this._pongWaiting = false
+        this.emit('pong', {})
+        this._pongReceivedTimestamp = dayjs()
+        // It is required to anonymous function since get this scope in checkAlive.
+        setTimeout(() => this._checkAlive(this._pongReceivedTimestamp), this._heartbeatInterval)
+      })
+    }
   }
 
   /**
@@ -241,7 +235,12 @@ export default class WebSocket extends EventEmitter implements WebSocketInterfac
       this.emit('update', PleromaAPI.Converter.status(status))
     })
     this.parser.on('notification', (notification: PleromaAPI.Entity.Notification) => {
-      this.emit('notification', PleromaAPI.Converter.notification(notification))
+      const n = PleromaAPI.Converter.notification(notification)
+      if (n instanceof UnknownNotificationTypeError) {
+        console.warn(`Unknown notification event has received: ${notification}`)
+      } else {
+        this.emit('notification', n)
+      }
     })
     this.parser.on('delete', (id: string) => {
       this.emit('delete', id)
@@ -290,10 +289,11 @@ export default class WebSocket extends EventEmitter implements WebSocketInterfac
  */
 export class Parser extends EventEmitter {
   /**
-   * @param message Message body of websocket.
+   * @param message Message event of websocket.
    */
-  public parse(data: WS.Data, isBinary: boolean) {
-    const message = isBinary ? data : data.toString()
+  public parse(ev: WS.MessageEvent) {
+    const data = ev.data
+    const message = data.toString()
     if (typeof message !== 'string') {
       this.emit('heartbeat', {})
       return

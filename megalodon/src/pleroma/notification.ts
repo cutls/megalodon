@@ -8,6 +8,8 @@ namespace PleromaNotificationType {
   export const Poll: PleromaEntity.NotificationType = 'poll'
   export const PleromaEmojiReaction: PleromaEntity.NotificationType = 'pleroma:emoji_reaction'
   export const FollowRequest: PleromaEntity.NotificationType = 'follow_request'
+  export const Update: PleromaEntity.NotificationType = 'update'
+  export const Move: PleromaEntity.NotificationType = 'move'
 }
 
 export default PleromaNotificationType

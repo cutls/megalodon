@@ -10,6 +10,9 @@ const account: PleromaEntity.Account = {
   acct: 'h3poteto@pleroma.io',
   display_name: 'h3poteto',
   locked: false,
+  noindex: null,
+  suspended: null,
+  limited: null,
   created_at: '2019-03-26T21:30:32',
   followers_count: 10,
   following_count: 10,
@@ -23,7 +26,14 @@ const account: PleromaEntity.Account = {
   emojis: [],
   moved: null,
   fields: [],
-  bot: false
+  bot: false,
+  source: {
+    privacy: null,
+    sensitive: false,
+    language: null,
+    note: 'test',
+    fields: []
+  }
 }
 
 describe('api_client', () => {
@@ -52,12 +62,20 @@ describe('api_client', () => {
             dist: PleromaNotificationType.Poll
           },
           {
-            src: MegalodonNotificationType.EmojiReaction,
+            src: MegalodonNotificationType.Reaction,
             dist: PleromaNotificationType.PleromaEmojiReaction
           },
           {
             src: MegalodonNotificationType.FollowRequest,
             dist: PleromaNotificationType.FollowRequest
+          },
+          {
+            src: MegalodonNotificationType.Update,
+            dist: PleromaNotificationType.Update
+          },
+          {
+            src: MegalodonNotificationType.Move,
+            dist: PleromaNotificationType.Move
           }
         ]
         cases.forEach(c => {
@@ -90,11 +108,19 @@ describe('api_client', () => {
           },
           {
             src: PleromaNotificationType.PleromaEmojiReaction,
-            dist: MegalodonNotificationType.EmojiReaction
+            dist: MegalodonNotificationType.Reaction
           },
           {
             src: PleromaNotificationType.FollowRequest,
             dist: MegalodonNotificationType.FollowRequest
+          },
+          {
+            src: PleromaNotificationType.Update,
+            dist: MegalodonNotificationType.Update
+          },
+          {
+            src: PleromaNotificationType.Move,
+            dist: MegalodonNotificationType.Move
           }
         ]
         cases.forEach(c => {
@@ -119,6 +145,7 @@ describe('api_client', () => {
           reblog: null,
           content: content,
           created_at: '2019-03-26T21:40:32',
+          edited_at: null,
           emojis: [],
           replies_count: 0,
           reblogs_count: 0,
@@ -136,7 +163,7 @@ describe('api_client', () => {
           poll: null,
           application: {
             name: 'Web'
-          } as MastodonEntity.Application,
+          } as PleromaEntity.Application,
           language: null,
           pinned: null,
           bookmarked: false,
@@ -166,6 +193,7 @@ describe('api_client', () => {
           reblog: null,
           content: content,
           created_at: '2019-03-26T21:40:32',
+          edited_at: null,
           emojis: [],
           replies_count: 0,
           reblogs_count: 0,
@@ -183,7 +211,7 @@ describe('api_client', () => {
           poll: null,
           application: {
             name: 'Web'
-          } as MastodonEntity.Application,
+          } as PleromaEntity.Application,
           language: null,
           pinned: null,
           bookmarked: false,

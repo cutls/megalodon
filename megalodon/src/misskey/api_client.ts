@@ -3,7 +3,6 @@ import dayjs from 'dayjs'
 import FormData from 'form-data'
 
 import { DEFAULT_UA } from '../default'
-import proxyAgent, { ProxyConfig } from '../proxy_config'
 import Response from '../response'
 import MisskeyEntity from './entity'
 import MegalodonEntity from '../entity'
@@ -93,7 +92,12 @@ namespace MisskeyAPI {
         emojis: emojiConverter(u.emojis).map(e => emoji(e)),
         moved: null,
         fields: [],
-        bot: false
+        bot: false,
+        group: false,
+        discoverable: false,
+        noindex: false,
+        suspended: false,
+        limited: false
       }
     }
 
@@ -124,7 +128,12 @@ namespace MisskeyAPI {
         emojis: emojiConverter(u.emojis).map(e => emoji(e)),
         moved: null,
         fields: [],
-        bot: u.isBot || false
+        bot: u.isBot || false,
+        group: false,
+        discoverable: false,
+        noindex: false,
+        suspended: false,
+        limited: false
       }
     }
 
@@ -208,7 +217,8 @@ namespace MisskeyAPI {
         domain_blocking: false,
         showing_reblogs: true,
         endorsed: false,
-        notifying: false
+        notifying: false,
+        note: ''
       }
     }
 
@@ -246,16 +256,17 @@ namespace MisskeyAPI {
         reblog: n.renote ? note(n.renote, host) : null,
         content: n.text
           ? n.text
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#39;')
-            .replace(/`/g, '&#x60;')
-            .replace(/\r?\n/g, '<br>')
+              .replace(/&/g, '&amp;')
+              .replace(/</g, '&lt;')
+              .replace(/>/g, '&gt;')
+              .replace(/"/g, '&quot;')
+              .replace(/'/g, '&#39;')
+              .replace(/`/g, '&#x60;')
+              .replace(/\r?\n/g, '<br>')
           : '',
         plain_content: n.text ? n.text : null,
         created_at: n.createdAt,
+        edited_at: null,
         emojis: emojiConverter(n.emojis).map(e => emoji(e)),
         replies_count: n.repliesCount,
         reblogs_count: n.renoteCount,
@@ -276,14 +287,26 @@ namespace MisskeyAPI {
         pinned: null,
         emoji_reactions: mapReactions(host, n.reactions, n.myReaction || '', n.reactionEmojis || {}),
         bookmarked: false,
-        quote: n.renote && n.text ? note(n.renote, host) : null
+        quote: !!(n.renote && n.text),
+        quote_status_misskey: n.renote && n.text ? note(n.renote, host) : null
       }
     }
-    export const mapReactions = (host: string, r: { [key: string]: number }, myReaction: string, emojiData: MisskeyEntity.Emoji[] | MisskeyEntity.EmojiKeyValue): Array<MegalodonEntity.Reaction> => {
+    export const mapReactions = (
+      host: string,
+      r: { [key: string]: number },
+      myReaction: string,
+      emojiData: MisskeyEntity.Emoji[] | MisskeyEntity.EmojiKeyValue
+    ): Array<MegalodonEntity.Reaction> => {
       if (isEmojiArr(emojiData)) {
-        return emojiData.map((e) => { return {
-          count: 0, me: false, name: e.name, url: e.url, static_url: e.url
-        }})
+        return emojiData.map(e => {
+          return {
+            count: 0,
+            me: false,
+            name: e.name,
+            url: e.url,
+            static_url: e.url
+          }
+        })
       }
       return Object.keys(r).map(key => {
         const shortcode = key.replace(/[:@.]/g, '')
@@ -307,12 +330,22 @@ namespace MisskeyAPI {
       })
     }
 
-    export const reactions = (r: Array<Entity.Reaction>, host: string, emojiData: MisskeyEntity.Emoji[] | MisskeyEntity.EmojiKeyValue): Array<MegalodonEntity.Reaction> => {
+    export const reactions = (
+      r: Array<Entity.Reaction>,
+      host: string,
+      emojiData: MisskeyEntity.Emoji[] | MisskeyEntity.EmojiKeyValue
+    ): Array<MegalodonEntity.Reaction> => {
       const result: Array<MegalodonEntity.Reaction> = []
       if (isEmojiArr(emojiData)) {
-        return emojiData.map((e) => {return {
-          count: 0, me: false, name: e.name, url: e.url, static_url: e.url
-        }})
+        return emojiData.map(e => {
+          return {
+            count: 0,
+            me: false,
+            name: e.name,
+            url: e.url,
+            static_url: e.url
+          }
+        })
       }
       for (const e of r) {
         const shortcode = e.type.replace(/[:@.]/g, '')
@@ -348,7 +381,8 @@ namespace MisskeyAPI {
 
     export const list = (l: Entity.List): MegalodonEntity.List => ({
       id: l.id,
-      title: l.name
+      title: l.name,
+      replies_policy: null
     })
 
     export const encodeNotificationType = (e: MegalodonEntity.NotificationType): MisskeyEntity.NotificationType => {
@@ -358,7 +392,7 @@ namespace MisskeyAPI {
         case NotificationType.Mention:
           return MisskeyNotificationType.Reply
         case NotificationType.Favourite:
-        case NotificationType.EmojiReaction:
+        case NotificationType.Reaction:
           return MisskeyNotificationType.Reaction
         case NotificationType.Reblog:
           return MisskeyNotificationType.Renote
@@ -382,7 +416,7 @@ namespace MisskeyAPI {
         case MisskeyNotificationType.Quote:
           return NotificationType.Reblog
         case MisskeyNotificationType.Reaction:
-          return NotificationType.EmojiReaction
+          return NotificationType.Reaction
         case MisskeyNotificationType.PollVote:
           return NotificationType.PollVote
         case MisskeyNotificationType.ReceiveFollowRequest:
@@ -393,8 +427,8 @@ namespace MisskeyAPI {
           return e
       }
     }
-    const modelOfAcct = {
-      id: "1",
+    const modelOfAcct: MegalodonEntity.Account = {
+      id: '1',
       username: 'none',
       acct: 'none',
       display_name: 'none',
@@ -412,12 +446,13 @@ namespace MisskeyAPI {
       followers_count: -1,
       following_count: 0,
       statuses_count: 0,
-      last_status_at: '1971-01-01T00:00:00.000Z',
       noindex: true,
       emojis: [],
       fields: [],
-      moved: null
-  }
+      moved: null,
+      suspended: false,
+      limited: false
+    }
 
     export const notification = (n: Entity.Notification, host: string): MegalodonEntity.Notification => {
       let notification = {
@@ -461,9 +496,14 @@ namespace MisskeyAPI {
         },
         stats: stats(s),
         languages: m.langs,
-        contact_account: null,
-        max_toot_chars: m.maxNoteTextLength,
-        registrations: !m.disableRegistration
+        contact_account: undefined,
+        registrations: !m.disableRegistration,
+        approval_required: false,
+        configuration: {
+          statuses: {
+            max_characters: m.maxNoteTextLength
+          }
+        }
       }
     }
 
@@ -471,7 +511,7 @@ namespace MisskeyAPI {
       return {
         name: h.tag,
         url: h.tag,
-        history: null,
+        history: [],
         following: false
       }
     }
@@ -517,19 +557,16 @@ namespace MisskeyAPI {
     private baseUrl: string
     private userAgent: string
     private abortController: AbortController
-    private proxyConfig: ProxyConfig | false = false
 
     /**
      * @param baseUrl hostname or base URL
      * @param accessToken access token from OAuth2 authorization
      * @param userAgent UserAgent is specified in header on request.
-     * @param proxyConfig Proxy setting, or set false if don't use proxy.
      */
-    constructor(baseUrl: string, accessToken: string | null, userAgent: string = DEFAULT_UA, proxyConfig: ProxyConfig | false = false) {
+    constructor(baseUrl: string, accessToken: string | null, userAgent: string = DEFAULT_UA) {
       this.accessToken = accessToken
       this.baseUrl = baseUrl
       this.userAgent = userAgent
-      this.proxyConfig = proxyConfig
       this.abortController = new AbortController()
       axios.defaults.signal = this.abortController.signal
     }
@@ -541,16 +578,10 @@ namespace MisskeyAPI {
      * @param headers Request header object
      */
     public async post<T>(path: string, params: any = {}, headers: { [key: string]: string } = {}): Promise<Response<T>> {
-      let options: AxiosRequestConfig = {
+      const options: AxiosRequestConfig = {
         headers: headers,
         maxContentLength: Infinity,
         maxBodyLength: Infinity
-      }
-      if (this.proxyConfig) {
-        options = Object.assign(options, {
-          httpAgent: proxyAgent(this.proxyConfig),
-          httpsAgent: proxyAgent(this.proxyConfig)
-        })
       }
       let bodyParams = params
       if (this.accessToken) {
@@ -597,7 +628,7 @@ namespace MisskeyAPI {
         throw new Error('accessToken is required')
       }
       const url = this.baseUrl + '/streaming'
-      const streaming = new WebSocket(url, channel, this.accessToken, listId, this.userAgent, this.proxyConfig)
+      const streaming = new WebSocket(url, channel, this.accessToken, listId, this.userAgent)
       process.nextTick(() => {
         streaming.start()
       })

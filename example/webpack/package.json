@@ -1,0 +1,22 @@
+{
+  "name": "webpack",
+  "version": "4.0.0",
+  "private": true,
+  "scripts": {
+    "build": "webpack",
+    "start": "http-server -p 8000 -s index.html",
+    "lint": "eslint --ext .js,.ts src"
+  },
+  "author": "Akira Fukushima <h3.poteto@gmail.com> (https://github.com/h3poteto)",
+  "license": "MIT",
+  "dependencies": {
+    "megalodon": "*"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1",
+    "ts-loader": "^9.5.1",
+    "typescript": "5.4.5",
+    "webpack": "^5.88.2",
+    "webpack-cli": "^5.1.4"
+  }
+}

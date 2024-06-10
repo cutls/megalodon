@@ -2,7 +2,8 @@ import PleromaEntity from '@/pleroma/entity'
 import Pleroma from '@/pleroma'
 import MegalodonNotificationType from '@/notification'
 import PleromaNotificationType from '@/pleroma/notification'
-import axios, { AxiosResponse } from 'axios'
+import Entity from '@/entity'
+import axios, { AxiosResponse, InternalAxiosRequestConfig, AxiosHeaders } from 'axios'
 
 jest.mock('axios')
 
@@ -12,6 +13,9 @@ const account: PleromaEntity.Account = {
   acct: 'h3poteto@pleroma.io',
   display_name: 'h3poteto',
   locked: false,
+  noindex: null,
+  suspended: null,
+  limited: null,
   created_at: '2019-03-26T21:30:32',
   followers_count: 10,
   following_count: 10,
@@ -25,7 +29,14 @@ const account: PleromaEntity.Account = {
   emojis: [],
   moved: null,
   fields: [],
-  bot: false
+  bot: false,
+  source: {
+    privacy: null,
+    sensitive: false,
+    language: null,
+    note: 'test',
+    fields: []
+  }
 }
 
 const status: PleromaEntity.Status = {
@@ -38,6 +49,7 @@ const status: PleromaEntity.Status = {
   reblog: null,
   content: 'hoge',
   created_at: '2019-03-26T21:40:32',
+  edited_at: null,
   emojis: [],
   replies_count: 0,
   reblogs_count: 0,
@@ -55,7 +67,7 @@ const status: PleromaEntity.Status = {
   poll: null,
   application: {
     name: 'Web'
-  } as MastodonEntity.Application,
+  } as PleromaEntity.Application,
   language: null,
   pinned: null,
   bookmarked: false,
@@ -112,6 +124,13 @@ const emojiReaction: PleromaEntity.Notification = {
   emoji: '♥'
 }
 
+const unknownEvent: PleromaEntity.Notification = {
+  account: account,
+  created_at: '2021-01-31T23:33:26',
+  id: '8',
+  type: 'unknown'
+}
+
 const followRequest: PleromaEntity.Notification = {
   account: account,
   created_at: '2021-01-31T23:33:26',
@@ -161,7 +180,7 @@ describe('getNotifications', () => {
     },
     {
       event: emojiReaction,
-      expected: MegalodonNotificationType.EmojiReaction,
+      expected: MegalodonNotificationType.Reaction,
       title: 'emojiReaction'
     },
     {
@@ -172,16 +191,34 @@ describe('getNotifications', () => {
   ]
   cases.forEach(c => {
     it(`should be ${c.title} event`, async () => {
+      const config: InternalAxiosRequestConfig<any> = {
+        headers: new AxiosHeaders()
+      }
       const mockResponse: AxiosResponse<Array<PleromaEntity.Notification>> = {
         data: [c.event],
         status: 200,
         statusText: '200OK',
         headers: {},
-        config: {}
+        config: config
       }
       ;(axios.get as any).mockResolvedValue(mockResponse)
       const res = await client.getNotifications()
       expect(res.data[0].type).toEqual(c.expected)
     })
+  })
+  it('UnknownEvent should be ignored', async () => {
+    const config: InternalAxiosRequestConfig<any> = {
+      headers: new AxiosHeaders()
+    }
+    const mockResponse: AxiosResponse<Array<PleromaEntity.Notification>> = {
+      data: [unknownEvent],
+      status: 200,
+      statusText: '200OK',
+      headers: {},
+      config: config
+    }
+    ;(axios.get as any).mockResolvedValue(mockResponse)
+    const res = await client.getNotifications()
+    expect(res.data).toEqual([])
   })
 })

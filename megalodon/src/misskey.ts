@@ -1,31 +1,23 @@
+/* eslint-disable @typescript-eslint/ban-types */
 import FormData from 'form-data'
-
 import MisskeyAPI from './misskey/api_client'
 import { DEFAULT_UA } from './default'
-import { ProxyConfig } from './proxy_config'
-import OAuth from './oauth'
+import MisskeyOAuth from './misskey_oauth'
 import Response from './response'
 import Entity from './entity'
-import { MegalodonInterface, WebSocketInterface, NoImplementedError, ArgumentError, UnexpectedError } from './megalodon'
+import { MegalodonInterface, WebSocketInterface, NotImplementedError, ArgumentError, UnexpectedError } from './megalodon'
 
 export default class Misskey implements MegalodonInterface {
   public client: MisskeyAPI.Interface
   public baseUrl: string
-  public proxyConfig: ProxyConfig | false
 
   /**
    * @param baseUrl hostname or base URL
    * @param accessToken access token from OAuth2 authorization
    * @param userAgent UserAgent is specified in header on request.
-   * @param proxyConfig Proxy setting, or set false if don't use proxy.
    */
-  constructor(
-    baseUrl: string,
-    accessToken: string | null = null,
-    userAgent: string | null = DEFAULT_UA,
-    proxyConfig: ProxyConfig | false = false
-  ) {
-    let token: string = ''
+  constructor(baseUrl: string, accessToken: string | null = null, userAgent: string | null = DEFAULT_UA) {
+    let token = ''
     if (accessToken) {
       token = accessToken
     }
@@ -33,9 +25,8 @@ export default class Misskey implements MegalodonInterface {
     if (userAgent) {
       agent = userAgent
     }
-    this.client = new MisskeyAPI.Client(baseUrl, token, agent, proxyConfig)
+    this.client = new MisskeyAPI.Client(baseUrl, token, agent)
     this.baseUrl = baseUrl
-    this.proxyConfig = proxyConfig
   }
 
   private baseUrlToHost(baseUrl: string): string {
@@ -52,7 +43,7 @@ export default class Misskey implements MegalodonInterface {
       scopes: MisskeyAPI.DEFAULT_SCOPE,
       redirect_uris: this.baseUrl
     }
-  ): Promise<OAuth.AppData> {
+  ): Promise<MisskeyOAuth.AppData> {
     return this.createApp(client_name, options).then(async appData => {
       return this.generateAuthUrlAndToken(appData.client_secret).then(session => {
         appData.url = session.url
@@ -61,7 +52,6 @@ export default class Misskey implements MegalodonInterface {
       })
     })
   }
-
 
   /**
    * POST /api/app/create
@@ -76,7 +66,7 @@ export default class Misskey implements MegalodonInterface {
       scopes: MisskeyAPI.DEFAULT_SCOPE,
       redirect_uris: this.baseUrl
     }
-  ): Promise<OAuth.AppData> {
+  ): Promise<MisskeyOAuth.AppData> {
     const redirect_uris = options.redirect_uris || this.baseUrl
     const scopes = options.scopes || MisskeyAPI.DEFAULT_SCOPE
 
@@ -105,7 +95,7 @@ export default class Misskey implements MegalodonInterface {
      }
     */
     return this.client.post<MisskeyAPI.Entity.App>('/api/app/create', params).then((res: Response<MisskeyAPI.Entity.App>) => {
-      const appData: OAuth.AppDataFromServer = {
+      const appData: MisskeyOAuth.AppDataFromServer = {
         id: res.data.id,
         name: res.data.name,
         website: null,
@@ -113,7 +103,7 @@ export default class Misskey implements MegalodonInterface {
         client_id: '',
         client_secret: res.data.secret
       }
-      return OAuth.AppData.from(appData)
+      return MisskeyOAuth.AppData.from(appData)
     })
   }
 
@@ -133,7 +123,7 @@ export default class Misskey implements MegalodonInterface {
   // ======================================
   public async verifyAppCredentials(): Promise<Response<Entity.Application>> {
     return new Promise((_, reject) => {
-      const err = new NoImplementedError('misskey does not support')
+      const err = new NotImplementedError('misskey does not support')
       reject(err)
     })
   }
@@ -154,28 +144,28 @@ export default class Misskey implements MegalodonInterface {
     client_secret: string,
     session_token: string,
     _redirect_uri?: string
-  ): Promise<OAuth.TokenData> {
+  ): Promise<MisskeyOAuth.TokenData> {
     return this.client
       .post<MisskeyAPI.Entity.UserKey>('/api/auth/session/userkey', {
         appSecret: client_secret,
         token: session_token
       })
       .then(res => {
-        const token = new OAuth.TokenData(res.data.accessToken, 'misskey', '', 0, null, null)
+        const token = new MisskeyOAuth.TokenData(res.data.accessToken, 'misskey', '', 0, null, null)
         return token
       })
   }
 
-  public async refreshToken(_client_id: string, _client_secret: string, _refresh_token: string): Promise<OAuth.TokenData> {
+  public async refreshToken(_client_id: string, _client_secret: string, _refresh_token: string): Promise<MisskeyOAuth.TokenData> {
     return new Promise((_, reject) => {
-      const err = new NoImplementedError('misskey does not support')
+      const err = new NotImplementedError('misskey does not support')
       reject(err)
     })
   }
 
   public async revokeToken(_client_id: string, _client_secret: string, _token: string): Promise<Response<{}>> {
     return new Promise((_, reject) => {
-      const err = new NoImplementedError('misskey does not support')
+      const err = new NotImplementedError('misskey does not support')
       reject(err)
     })
   }
@@ -192,7 +182,7 @@ export default class Misskey implements MegalodonInterface {
     _reason?: string | null
   ): Promise<Response<Entity.Token>> {
     return new Promise((_, reject) => {
-      const err = new NoImplementedError('misskey does not support')
+      const err = new NotImplementedError('misskey does not support')
       reject(err)
     })
   }
@@ -363,21 +353,21 @@ export default class Misskey implements MegalodonInterface {
     }
   ): Promise<Response<Array<Entity.Status>>> {
     return new Promise((_, reject) => {
-      const err = new NoImplementedError('misskey does not support')
+      const err = new NotImplementedError('misskey does not support')
       reject(err)
     })
   }
 
   public async subscribeAccount(_id: string): Promise<Response<Entity.Relationship>> {
     return new Promise((_, reject) => {
-      const err = new NoImplementedError('misskey does not support')
+      const err = new NotImplementedError('misskey does not support')
       reject(err)
     })
   }
 
   public async unsubscribeAccount(_id: string): Promise<Response<Entity.Relationship>> {
     return new Promise((_, reject) => {
-      const err = new NoImplementedError('misskey does not support')
+      const err = new NotImplementedError('misskey does not support')
       reject(err)
     })
   }
@@ -440,14 +430,14 @@ export default class Misskey implements MegalodonInterface {
 
   public async getAccountLists(_id: string): Promise<Response<Array<Entity.List>>> {
     return new Promise((_, reject) => {
-      const err = new NoImplementedError('misskey does not support')
+      const err = new NotImplementedError('misskey does not support')
       reject(err)
     })
   }
 
   public async getIdentityProof(_id: string): Promise<Response<Array<Entity.IdentityProof>>> {
     return new Promise((_, reject) => {
-      const err = new NoImplementedError('misskey does not support')
+      const err = new NotImplementedError('misskey does not support')
       reject(err)
     })
   }
@@ -562,14 +552,14 @@ export default class Misskey implements MegalodonInterface {
 
   public async pinAccount(_id: string): Promise<Response<Entity.Relationship>> {
     return new Promise((_, reject) => {
-      const err = new NoImplementedError('misskey does not support')
+      const err = new NotImplementedError('misskey does not support')
       reject(err)
     })
   }
 
   public async unpinAccount(_id: string): Promise<Response<Entity.Relationship>> {
     return new Promise((_, reject) => {
-      const err = new NoImplementedError('misskey does not support')
+      const err = new NotImplementedError('misskey does not support')
       reject(err)
     })
   }
@@ -638,6 +628,17 @@ export default class Misskey implements MegalodonInterface {
       })
     })
   }
+  public async lookupAccount(acct: string): Promise<Response<Entity.Account>> {
+    const params = {
+      query: acct,
+      detail: true
+    }
+    return this.client.post<Array<MisskeyAPI.Entity.UserDetail>>('/api/users/search', params).then(res => {
+      return Object.assign(res, {
+        data: MisskeyAPI.Converter.user(res.data[0], this.baseUrlToHost(this.baseUrl))
+      })
+    })
+  }
 
   // ======================================
   // accounts/bookmarks
@@ -649,7 +650,7 @@ export default class Misskey implements MegalodonInterface {
     min_id?: string
   }): Promise<Response<Array<Entity.Status>>> {
     return new Promise((_, reject) => {
-      const err = new NoImplementedError('misskey does not support')
+      const err = new NotImplementedError('misskey does not support')
       reject(err)
     })
   }
@@ -755,21 +756,21 @@ export default class Misskey implements MegalodonInterface {
   // ======================================
   public async getDomainBlocks(_options?: { limit?: number; max_id?: string; min_id?: string }): Promise<Response<Array<string>>> {
     return new Promise((_, reject) => {
-      const err = new NoImplementedError('misskey does not support')
+      const err = new NotImplementedError('misskey does not support')
       reject(err)
     })
   }
 
   public async blockDomain(_domain: string): Promise<Response<{}>> {
     return new Promise((_, reject) => {
-      const err = new NoImplementedError('misskey does not support')
+      const err = new NotImplementedError('misskey does not support')
       reject(err)
     })
   }
 
   public async unblockDomain(_domain: string): Promise<Response<{}>> {
     return new Promise((_, reject) => {
-      const err = new NoImplementedError('misskey does not support')
+      const err = new NotImplementedError('misskey does not support')
       reject(err)
     })
   }
@@ -779,14 +780,14 @@ export default class Misskey implements MegalodonInterface {
   // ======================================
   public async getFilters(): Promise<Response<Array<Entity.Filter>>> {
     return new Promise((_, reject) => {
-      const err = new NoImplementedError('misskey does not support')
+      const err = new NotImplementedError('misskey does not support')
       reject(err)
     })
   }
 
   public async getFilter(_id: string): Promise<Response<Entity.Filter>> {
     return new Promise((_, reject) => {
-      const err = new NoImplementedError('misskey does not support')
+      const err = new NotImplementedError('misskey does not support')
       reject(err)
     })
   }
@@ -801,7 +802,7 @@ export default class Misskey implements MegalodonInterface {
     }
   ): Promise<Response<Entity.Filter>> {
     return new Promise((_, reject) => {
-      const err = new NoImplementedError('misskey does not support')
+      const err = new NotImplementedError('misskey does not support')
       reject(err)
     })
   }
@@ -817,14 +818,14 @@ export default class Misskey implements MegalodonInterface {
     }
   ): Promise<Response<Entity.Filter>> {
     return new Promise((_, reject) => {
-      const err = new NoImplementedError('misskey does not support')
+      const err = new NotImplementedError('misskey does not support')
       reject(err)
     })
   }
 
   public async deleteFilter(_id: string): Promise<Response<Entity.Filter>> {
     return new Promise((_, reject) => {
-      const err = new NoImplementedError('misskey does not support')
+      const err = new NotImplementedError('misskey does not support')
       reject(err)
     })
   }
@@ -837,25 +838,31 @@ export default class Misskey implements MegalodonInterface {
    */
   public async report(
     account_id: string,
-    comment: string,
-    _options?: {
+    options?: {
       status_ids?: Array<string>
+      comment: string
       forward?: boolean
+      category?: Entity.Category
+      rule_ids?: Array<number>
     }
   ): Promise<Response<Entity.Report>> {
     return this.client
       .post<{}>('/api/users/report-abuse', {
         userId: account_id,
-        comment: comment
+        comment: options?.comment || ''
       })
       .then(res => {
         return Object.assign(res, {
           data: {
             id: '',
-            action_taken: '',
-            comment: comment,
+            action_taken: false,
+            comment: options?.comment || '',
             account_id: account_id,
-            status_ids: []
+            status_ids: [],
+            category: null,
+            forwarded: null,
+            action_taken_at: null,
+            rule_ids: null
           }
         })
       })
@@ -920,7 +927,7 @@ export default class Misskey implements MegalodonInterface {
     since_id?: string
   }): Promise<Response<Array<Entity.Account>>> {
     return new Promise((_, reject) => {
-      const err = new NoImplementedError('misskey does not support')
+      const err = new NotImplementedError('misskey does not support')
       reject(err)
     })
   }
@@ -930,28 +937,28 @@ export default class Misskey implements MegalodonInterface {
   // ======================================
   public async getFeaturedTags(): Promise<Response<Array<Entity.FeaturedTag>>> {
     return new Promise((_, reject) => {
-      const err = new NoImplementedError('misskey does not support')
+      const err = new NotImplementedError('misskey does not support')
       reject(err)
     })
   }
 
   public async createFeaturedTag(_name: string): Promise<Response<Entity.FeaturedTag>> {
     return new Promise((_, reject) => {
-      const err = new NoImplementedError('misskey does not support')
+      const err = new NotImplementedError('misskey does not support')
       reject(err)
     })
   }
 
   public async deleteFeaturedTag(_id: string): Promise<Response<{}>> {
     return new Promise((_, reject) => {
-      const err = new NoImplementedError('misskey does not support')
+      const err = new NotImplementedError('misskey does not support')
       reject(err)
     })
   }
 
   public async getSuggestedTags(): Promise<Response<Array<Entity.Tag>>> {
     return new Promise((_, reject) => {
-      const err = new NoImplementedError('misskey does not support')
+      const err = new NotImplementedError('misskey does not support')
       reject(err)
     })
   }
@@ -961,7 +968,7 @@ export default class Misskey implements MegalodonInterface {
   // ======================================
   public async getPreferences(): Promise<Response<Entity.Preferences>> {
     return new Promise((_, reject) => {
-      const err = new NoImplementedError('misskey does not support')
+      const err = new NotImplementedError('misskey does not support')
       reject(err)
     })
   }
@@ -989,21 +996,21 @@ export default class Misskey implements MegalodonInterface {
   // ======================================
   public async getTag(_id: string): Promise<Response<Entity.Tag>> {
     return new Promise((_, reject) => {
-      const err = new NoImplementedError('misskey does not support')
+      const err = new NotImplementedError('misskey does not support')
       reject(err)
     })
   }
 
   public async followTag(_id: string): Promise<Response<Entity.Tag>> {
     return new Promise((_, reject) => {
-      const err = new NoImplementedError('misskey does not support')
+      const err = new NotImplementedError('misskey does not support')
       reject(err)
     })
   }
 
   public async unfollowTag(_id: string): Promise<Response<Entity.Tag>> {
     return new Promise((_, reject) => {
-      const err = new NoImplementedError('misskey does not support')
+      const err = new NotImplementedError('misskey does not support')
       reject(err)
     })
   }
@@ -1091,6 +1098,21 @@ export default class Misskey implements MegalodonInterface {
       .then(res => ({ ...res, data: MisskeyAPI.Converter.note(res.data, this.baseUrlToHost(this.baseUrl)) }))
   }
 
+  public async getStatusSource(id: string): Promise<Response<Entity.StatusSource>> {
+    return this.client
+      .post<MisskeyAPI.Entity.Note>('/api/notes/show', {
+        noteId: id
+      })
+      .then(res => ({
+        ...res,
+        data: {
+          id,
+          text: res.data.text || '',
+          spoiler_text: res.data.cw || ''
+        }
+      }))
+  }
+
   public async editStatus(
     _id: string,
     _options: {
@@ -1102,7 +1124,7 @@ export default class Misskey implements MegalodonInterface {
     }
   ): Promise<Response<Entity.Status>> {
     return new Promise((_, reject) => {
-      const err = new NoImplementedError('misskey does not support')
+      const err = new NotImplementedError('misskey does not support')
       reject(err)
     })
   }
@@ -1171,7 +1193,7 @@ export default class Misskey implements MegalodonInterface {
 
   public async getStatusFavouritedBy(_id: string): Promise<Response<Array<Entity.Account>>> {
     return new Promise((_, reject) => {
-      const err = new NoImplementedError('misskey does not support')
+      const err = new NotImplementedError('misskey does not support')
       reject(err)
     })
   }
@@ -1231,28 +1253,28 @@ export default class Misskey implements MegalodonInterface {
 
   public async bookmarkStatus(_id: string): Promise<Response<Entity.Status>> {
     return new Promise((_, reject) => {
-      const err = new NoImplementedError('misskey does not support')
+      const err = new NotImplementedError('misskey does not support')
       reject(err)
     })
   }
 
   public async unbookmarkStatus(_id: string): Promise<Response<Entity.Status>> {
     return new Promise((_, reject) => {
-      const err = new NoImplementedError('misskey does not support')
+      const err = new NotImplementedError('misskey does not support')
       reject(err)
     })
   }
 
   public async muteStatus(_id: string): Promise<Response<Entity.Status>> {
     return new Promise((_, reject) => {
-      const err = new NoImplementedError('misskey does not support')
+      const err = new NotImplementedError('misskey does not support')
       reject(err)
     })
   }
 
   public async unmuteStatus(_id: string): Promise<Response<Entity.Status>> {
     return new Promise((_, reject) => {
-      const err = new NoImplementedError('misskey does not support')
+      const err = new NotImplementedError('misskey does not support')
       reject(err)
     })
   }
@@ -1340,7 +1362,7 @@ export default class Misskey implements MegalodonInterface {
   // ======================================
   public async getPoll(_id: string): Promise<Response<Entity.Poll>> {
     return new Promise((_, reject) => {
-      const err = new NoImplementedError('misskey does not support')
+      const err = new NotImplementedError('misskey does not support')
       reject(err)
     })
   }
@@ -1387,28 +1409,28 @@ export default class Misskey implements MegalodonInterface {
     min_id?: string
   }): Promise<Response<Array<Entity.ScheduledStatus>>> {
     return new Promise((_, reject) => {
-      const err = new NoImplementedError('misskey does not support')
+      const err = new NotImplementedError('misskey does not support')
       reject(err)
     })
   }
 
   public async getScheduledStatus(_id: string): Promise<Response<Entity.ScheduledStatus>> {
     return new Promise((_, reject) => {
-      const err = new NoImplementedError('misskey does not support')
+      const err = new NotImplementedError('misskey does not support')
       reject(err)
     })
   }
 
   public async scheduleStatus(_id: string, _scheduled_at?: string | null): Promise<Response<Entity.ScheduledStatus>> {
     return new Promise((_, reject) => {
-      const err = new NoImplementedError('misskey does not support')
+      const err = new NotImplementedError('misskey does not support')
       reject(err)
     })
   }
 
   public async cancelScheduledStatus(_id: string): Promise<Response<{}>> {
     return new Promise((_, reject) => {
-      const err = new NoImplementedError('misskey does not support')
+      const err = new NotImplementedError('misskey does not support')
       reject(err)
     })
   }
@@ -1678,14 +1700,14 @@ export default class Misskey implements MegalodonInterface {
 
   public async deleteConversation(_id: string): Promise<Response<{}>> {
     return new Promise((_, reject) => {
-      const err = new NoImplementedError('misskey does not support')
+      const err = new NotImplementedError('misskey does not support')
       reject(err)
     })
   }
 
   public async readConversation(_id: string): Promise<Response<Entity.Conversation>> {
     return new Promise((_, reject) => {
-      const err = new NoImplementedError('misskey does not support')
+      const err = new NotImplementedError('misskey does not support')
       reject(err)
     })
   }
@@ -1789,7 +1811,7 @@ export default class Misskey implements MegalodonInterface {
   // ======================================
   public async getMarkers(_timeline: Array<string>): Promise<Response<Entity.Marker | {}>> {
     return new Promise((_, reject) => {
-      const err = new NoImplementedError('misskey does not support')
+      const err = new NotImplementedError('misskey does not support')
       reject(err)
     })
   }
@@ -1799,7 +1821,7 @@ export default class Misskey implements MegalodonInterface {
     notifications?: { last_read_id: string }
   }): Promise<Response<Entity.Marker>> {
     return new Promise((_, reject) => {
-      const err = new NoImplementedError('misskey does not support')
+      const err = new NotImplementedError('misskey does not support')
       reject(err)
     })
   }
@@ -1853,7 +1875,7 @@ export default class Misskey implements MegalodonInterface {
 
   public async getNotification(_id: string): Promise<Response<Entity.Notification>> {
     return new Promise((_, reject) => {
-      const err = new NoImplementedError('misskey does not support')
+      const err = new NotImplementedError('misskey does not support')
       reject(err)
     })
   }
@@ -1867,7 +1889,7 @@ export default class Misskey implements MegalodonInterface {
 
   public async dismissNotification(_id: string): Promise<Response<{}>> {
     return new Promise((_, reject) => {
-      const err = new NoImplementedError('misskey does not support')
+      const err = new NotImplementedError('misskey does not support')
       reject(err)
     })
   }
@@ -1877,7 +1899,7 @@ export default class Misskey implements MegalodonInterface {
     max_id?: string
   }): Promise<Response<Entity.Notification | Array<Entity.Notification>>> {
     return new Promise((_, reject) => {
-      const err = new NoImplementedError('mastodon does not support')
+      const err = new NotImplementedError('mastodon does not support')
       reject(err)
     })
   }
@@ -1890,14 +1912,14 @@ export default class Misskey implements MegalodonInterface {
     _data?: { alerts: { follow?: boolean; favourite?: boolean; reblog?: boolean; mention?: boolean; poll?: boolean } } | null
   ): Promise<Response<Entity.PushSubscription>> {
     return new Promise((_, reject) => {
-      const err = new NoImplementedError('misskey does not support')
+      const err = new NotImplementedError('misskey does not support')
       reject(err)
     })
   }
 
   public async getPushSubscription(): Promise<Response<Entity.PushSubscription>> {
     return new Promise((_, reject) => {
-      const err = new NoImplementedError('misskey does not support')
+      const err = new NotImplementedError('misskey does not support')
       reject(err)
     })
   }
@@ -1906,7 +1928,7 @@ export default class Misskey implements MegalodonInterface {
     _data?: { alerts: { follow?: boolean; favourite?: boolean; reblog?: boolean; mention?: boolean; poll?: boolean } } | null
   ): Promise<Response<Entity.PushSubscription>> {
     return new Promise((_, reject) => {
-      const err = new NoImplementedError('misskey does not support')
+      const err = new NotImplementedError('misskey does not support')
       reject(err)
     })
   }
@@ -1916,7 +1938,7 @@ export default class Misskey implements MegalodonInterface {
    */
   public async deletePushSubscription(): Promise<Response<{}>> {
     return new Promise((_, reject) => {
-      const err = new NoImplementedError('misskey does not support')
+      const err = new NotImplementedError('misskey does not support')
       reject(err)
     })
   }
@@ -1926,8 +1948,8 @@ export default class Misskey implements MegalodonInterface {
   // ======================================
   public async search(
     q: string,
-    type: 'accounts' | 'hashtags' | 'statuses',
     options?: {
+      type?: 'accounts' | 'hashtags' | 'statuses'
       limit?: number
       max_id?: string
       min_id?: string
@@ -1938,7 +1960,7 @@ export default class Misskey implements MegalodonInterface {
       exclude_unreviewed?: boolean
     }
   ): Promise<Response<Entity.Results>> {
-    switch (type) {
+    switch (options?.type) {
       case 'accounts': {
         let params = {
           query: q
@@ -2030,9 +2052,27 @@ export default class Misskey implements MegalodonInterface {
           data: {
             accounts: [],
             statuses: [],
-            hashtags: res.data.map(h => ({ name: h, url: h, history: null, following: false }))
+            hashtags: res.data.map(h => ({ name: h, url: h, history: [], following: false }))
           }
         }))
+      }
+      default: {
+        const newOptionAcct = { ...options, type: 'accounts' as const }
+        const newOptionStatus = { ...options, type: 'statuses' as const }
+        const newOptionHashtag = { ...options, type: 'hashtags' as const }
+        const [accounts, statuses, hashtags] = await Promise.all([
+          this.search(q, newOptionAcct),
+          this.search(q, newOptionStatus),
+          this.search(q, newOptionHashtag)
+        ])
+        return {
+          ...accounts,
+          data: {
+            accounts: accounts.data.accounts,
+            statuses: statuses.data.statuses,
+            hashtags: hashtags.data.hashtags
+          }
+        }
       }
     }
   }
@@ -2053,14 +2093,14 @@ export default class Misskey implements MegalodonInterface {
 
   public async getInstancePeers(): Promise<Response<Array<string>>> {
     return new Promise((_, reject) => {
-      const err = new NoImplementedError('misskey does not support')
+      const err = new NotImplementedError('misskey does not support')
       reject(err)
     })
   }
 
   public async getInstanceActivity(): Promise<Response<Array<Entity.Activity>>> {
     return new Promise((_, reject) => {
-      const err = new NoImplementedError('misskey does not support')
+      const err = new NotImplementedError('misskey does not support')
       reject(err)
     })
   }
@@ -2087,7 +2127,7 @@ export default class Misskey implements MegalodonInterface {
     local?: boolean
   }): Promise<Response<Array<Entity.Account>>> {
     return new Promise((_, reject) => {
-      const err = new NoImplementedError('misskey does not support')
+      const err = new NotImplementedError('misskey does not support')
       reject(err)
     })
   }
@@ -2141,39 +2181,93 @@ export default class Misskey implements MegalodonInterface {
 
   public async getEmojiReactions(_id: string): Promise<Response<Array<Entity.Reaction>>> {
     return new Promise((_, reject) => {
-      const err = new NoImplementedError('misskey does not support')
+      const err = new NotImplementedError('misskey does not support')
       reject(err)
     })
   }
 
   public async getEmojiReaction(_id: string, _emoji: string): Promise<Response<Entity.Reaction>> {
     return new Promise((_, reject) => {
-      const err = new NoImplementedError('misskey does not support')
+      const err = new NotImplementedError('misskey does not support')
+      reject(err)
+    })
+  }
+  public async getFollowedTags(): Promise<Response<Array<Entity.Tag>>> {
+    return new Promise((_, reject) => {
+      const err = new NotImplementedError('misskey does not support')
+      reject(err)
+    })
+  }
+  public async getInstanceAnnouncements(): Promise<Response<Array<Entity.Announcement>>> {
+    return new Promise((_, reject) => {
+      const err = new NotImplementedError('misskey does not support')
+      reject(err)
+    })
+  }
+  public async dismissInstanceAnnouncement(): Promise<Response<Array<Entity.Announcement>>> {
+    return new Promise((_, reject) => {
+      const err = new NotImplementedError('misskey does not support')
+      reject(err)
+    })
+  }
+  public async addReactionToAnnouncement(): Promise<Response<Array<Entity.Announcement>>> {
+    return new Promise((_, reject) => {
+      const err = new NotImplementedError('misskey does not support')
+      reject(err)
+    })
+  }
+  public async removeReactionFromAnnouncement(): Promise<Response<Array<Entity.Announcement>>> {
+    return new Promise((_, reject) => {
+      const err = new NotImplementedError('misskey does not support')
       reject(err)
     })
   }
 
-  public userSocket(): WebSocketInterface {
-    return this.client.socket('user')
+  public async streamingURL(): Promise<string> {
+    const instance = await this.getInstance()
+    if (instance.data.urls) {
+      return instance.data.urls.streaming_api
+    }
+    return this.baseUrl
   }
 
-  public publicSocket(): WebSocketInterface {
-    return this.client.socket('globalTimeline')
+  public async userStreaming(): Promise<WebSocketInterface> {
+    return new Promise((resolve, _) => {
+      const str = this.client.socket('user')
+      resolve(str)
+    })
+  }
+  public async publicStreaming(): Promise<WebSocketInterface> {
+    return new Promise((resolve, _) => {
+      const str = this.client.socket('globalTimeline')
+      resolve(str)
+    })
   }
 
-  public localSocket(): WebSocketInterface {
-    return this.client.socket('localTimeline')
+  public async localStreaming(): Promise<WebSocketInterface> {
+    return new Promise((resolve, _) => {
+      const str = this.client.socket('localTimeline')
+      resolve(str)
+    })
+  }
+  public async tagStreaming(_tag: string): Promise<WebSocketInterface> {
+    return new Promise((_, reject) => {
+      const err = new NotImplementedError('misskey does not support')
+      reject(err)
+    })
   }
 
-  public tagSocket(_tag: string): WebSocketInterface {
-    throw new NoImplementedError('TODO: implement')
+  public async listStreaming(list_id: string): Promise<WebSocketInterface> {
+    return new Promise((resolve, _) => {
+      const str = this.client.socket('list', list_id)
+      resolve(str)
+    })
   }
 
-  public listSocket(list_id: string): WebSocketInterface {
-    return this.client.socket('list', list_id)
-  }
-
-  public directSocket(): WebSocketInterface {
-    return this.client.socket('conversation')
+  public async directStreaming(): Promise<WebSocketInterface> {
+    return new Promise((resolve, _) => {
+      const str = this.client.socket('conversation')
+      resolve(str)
+    })
   }
 }

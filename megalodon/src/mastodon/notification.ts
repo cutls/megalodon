@@ -8,6 +8,9 @@ namespace MastodonNotificationType {
   export const Poll: MastodonEntity.NotificationType = 'poll'
   export const FollowRequest: MastodonEntity.NotificationType = 'follow_request'
   export const Status: MastodonEntity.NotificationType = 'status'
+  export const Update: MastodonEntity.NotificationType = 'update'
+  export const AdminSignup: MastodonEntity.NotificationType = 'admin.sign_up'
+  export const AdminReport: MastodonEntity.NotificationType = 'admin.report'
 }
 
 export default MastodonNotificationType

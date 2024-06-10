@@ -2,7 +2,8 @@ import MastodonEntity from '@/mastodon/entity'
 import MastodonNotificationType from '@/mastodon/notification'
 import Mastodon from '@/mastodon'
 import MegalodonNotificationType from '@/notification'
-import axios, { AxiosResponse } from 'axios'
+import Entity from '@/entity'
+import axios, { AxiosResponse, InternalAxiosRequestConfig, AxiosHeaders } from 'axios'
 
 jest.mock('axios')
 
@@ -12,6 +13,10 @@ const account: MastodonEntity.Account = {
   acct: 'h3poteto@pleroma.io',
   display_name: 'h3poteto',
   locked: false,
+  group: false,
+  noindex: false,
+  suspended: false,
+  limited: false,
   created_at: '2019-03-26T21:30:32',
   followers_count: 10,
   following_count: 10,
@@ -25,7 +30,14 @@ const account: MastodonEntity.Account = {
   emojis: [],
   moved: null,
   fields: [],
-  bot: false
+  bot: false,
+  source: {
+    privacy: null,
+    sensitive: false,
+    language: null,
+    note: 'test',
+    fields: []
+  }
 }
 
 const status: MastodonEntity.Status = {
@@ -38,6 +50,7 @@ const status: MastodonEntity.Status = {
   reblog: null,
   content: 'hoge',
   created_at: '2019-03-26T21:40:32',
+  edited_at: null,
   emojis: [],
   replies_count: 0,
   reblogs_count: 0,
@@ -114,6 +127,13 @@ const toot: MastodonEntity.Notification = {
   type: MastodonNotificationType.Status
 }
 
+const unknownEvent: MastodonEntity.Notification = {
+  account: account,
+  created_at: '2021-01-31T23:33:26',
+  id: '8',
+  type: 'unknown'
+}
+
 ;(axios.CancelToken.source as any).mockImplementation(() => {
   return {
     token: {
@@ -167,16 +187,34 @@ describe('getNotifications', () => {
   ]
   cases.forEach(c => {
     it(`should be ${c.title} event`, async () => {
+      const config: InternalAxiosRequestConfig<any> = {
+        headers: new AxiosHeaders()
+      }
       const mockResponse: AxiosResponse<Array<MastodonEntity.Notification>> = {
         data: [c.event],
         status: 200,
         statusText: '200OK',
         headers: {},
-        config: {}
+        config: config
       }
       ;(axios.get as any).mockResolvedValue(mockResponse)
       const res = await client.getNotifications()
       expect(res.data[0].type).toEqual(c.expected)
     })
+  })
+  it('UnknownEvent should be ignored', async () => {
+    const config: InternalAxiosRequestConfig<any> = {
+      headers: new AxiosHeaders()
+    }
+    const mockResponse: AxiosResponse<Array<MastodonEntity.Notification>> = {
+      data: [unknownEvent],
+      status: 200,
+      statusText: '200OK',
+      headers: {},
+      config: config
+    }
+    ;(axios.get as any).mockResolvedValue(mockResponse)
+    const res = await client.getNotifications()
+    expect(res.data).toEqual([])
   })
 })

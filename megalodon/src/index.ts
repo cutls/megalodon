@@ -1,8 +1,8 @@
 import Response from './response'
 import OAuth from './oauth'
 import { isCancel, RequestCanceledError } from './cancel'
-import { ProxyConfig } from './proxy_config'
-import generator, { detector, MegalodonInterface, WebSocketInterface } from './megalodon'
+import generator, { MegalodonInterface, WebSocketInterface } from './megalodon'
+import { detector } from './detector'
 import Mastodon from './mastodon'
 import Pleroma from './pleroma'
 import Misskey from './misskey'
@@ -16,7 +16,6 @@ export {
   OAuth,
   RequestCanceledError,
   isCancel,
-  ProxyConfig,
   detector,
   MegalodonInterface,
   WebSocketInterface,

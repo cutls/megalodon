@@ -9,7 +9,7 @@ module.exports = {
     browser: true,
     node: true
   },
-  extends: ['standard', 'prettier'],
+  extends: ['eslint:recommended', 'plugin:@typescript-eslint/recommended', 'prettier'],
   globals: {
     __static: true
   },
@@ -29,8 +29,13 @@ module.exports = {
       }
     ],
     camelcase: 'off',
+    'no-inferrable-types': 'off',
     '@typescript-eslint/camelcase': 'off',
     'space-before-function-paren': 'off',
-    'promise/param-names': 'off'
+    'promise/param-names': 'off',
+    '@typescript-eslint/triple-slash-reference': 'off',
+    '@typescript-eslint/no-explicit-any': 'off',
+    '@typescript-eslint/no-namespace': 'off',
+    'prettier/prettier': 'error'
   }
 }
