@@ -7,3 +7,4 @@ docs/
 .env
 .yarn/*
 !.yarn/releases
+*.sh

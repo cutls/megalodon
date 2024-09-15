@@ -1,9 +1,9 @@
-import WS from 'ws'
-import dayjs, { Dayjs } from 'dayjs'
+import WS from 'isomorphic-ws'
 import { v4 as uuid } from 'uuid'
 import { EventEmitter } from 'events'
 import { WebSocketInterface } from '../megalodon'
 import MisskeyAPI from './api_client'
+import { isBrowser } from '../default'
 
 /**
  * WebSocket
@@ -13,7 +13,7 @@ import MisskeyAPI from './api_client'
 export default class WebSocket extends EventEmitter implements WebSocketInterface {
   public url: string
   public channel: 'user' | 'localTimeline' | 'hybridTimeline' | 'globalTimeline' | 'conversation' | 'list'
-  public parser: any
+  public parser: Parser
   public headers: { [key: string]: string }
   public listId: string | null = null
   private _accessToken: string
@@ -23,9 +23,6 @@ export default class WebSocket extends EventEmitter implements WebSocketInterfac
   private _connectionClosed: boolean
   private _client: WS | null = null
   private _channelID: string
-  private _pongReceivedTimestamp: Dayjs
-  private _heartbeatInterval = 60000
-  private _pongWaiting = false
 
   /**
    * @param url Full url of websocket: e.g. wss://misskey.io/streaming
@@ -58,7 +55,6 @@ export default class WebSocket extends EventEmitter implements WebSocketInterfac
     this._reconnectCurrentAttempts = 0
     this._connectionClosed = false
     this._channelID = uuid()
-    this._pongReceivedTimestamp = dayjs()
   }
 
   /**
@@ -71,7 +67,7 @@ export default class WebSocket extends EventEmitter implements WebSocketInterfac
   }
 
   private baseUrlToHost(baseUrl: string): string {
-    return baseUrl.replace('https://', '')
+    return baseUrl.replace('https://', '').replace('wss://', '')
   }
 
   /**
@@ -99,7 +95,7 @@ export default class WebSocket extends EventEmitter implements WebSocketInterfac
   private _resetConnection() {
     if (this._client) {
       this._client.close(1000)
-      this._client.removeAllListeners()
+      this._clearBinding()
       this._client = null
     }
 
@@ -119,13 +115,21 @@ export default class WebSocket extends EventEmitter implements WebSocketInterfac
    * Connect to the endpoint.
    */
   private _connect(): WS {
-    const options: WS.ClientOptions = {
-      headers: this.headers
-    }
-    const cli: WS = new WS(`${this.url}?i=${this._accessToken}`, options)
-    return cli
-  }
+    const requestURL = `${this.url}?i=${this._accessToken}`
+    if (isBrowser()) {
+      // This is browser.
+      // We can't pass options when browser: https://github.com/heineiuo/isomorphic-ws#limitations
+      const cli = new WS(requestURL)
+      return cli
+    } else {
+      const options: WS.ClientOptions = {
+        headers: this.headers
+      }
 
+      const cli: WS = new WS(requestURL, options)
+      return cli
+    }
+  }
   /**
    * Connect specified channels in websocket.
    */
@@ -211,7 +215,11 @@ export default class WebSocket extends EventEmitter implements WebSocketInterfac
         if (this._client) {
           // In reconnect, we want to close the connection immediately,
           // because recoonect is necessary when some problems occur.
-          this._client.terminate()
+          if (isBrowser()) {
+            this._client.close()
+          } else {
+            this._client.terminate()
+          }
         }
         // Call connect methods
         console.log('Reconnecting')
@@ -225,7 +233,7 @@ export default class WebSocket extends EventEmitter implements WebSocketInterfac
    * Clear binding event for websocket client.
    */
   private _clearBinding() {
-    if (this._client) {
+    if (this._client && !isBrowser()) {
       this._client.removeAllListeners('close')
       this._client.removeAllListeners('pong')
       this._client.removeAllListeners('open')
@@ -239,7 +247,7 @@ export default class WebSocket extends EventEmitter implements WebSocketInterfac
    * @param client A WebSocket instance.
    */
   private _bindSocket(client: WS) {
-    client.on('close', (code: number, _reason: Buffer) => {
+    client.onclose = ({ code }: { code: number }) => {
       if (code === 1000) {
         this.emit('close', {})
       } else {
@@ -248,28 +256,23 @@ export default class WebSocket extends EventEmitter implements WebSocketInterfac
           this._reconnect()
         }
       }
-    })
-    client.on('pong', () => {
-      this._pongWaiting = false
-      this.emit('pong', {})
-      this._pongReceivedTimestamp = dayjs()
-      // It is required to anonymous function since get this scope in checkAlive.
-      setTimeout(() => this._checkAlive(this._pongReceivedTimestamp), this._heartbeatInterval)
-    })
-    client.on('open', () => {
+    }
+    client.onopen = _event => {
       this.emit('connect', {})
       this._channel()
-      // Call first ping event.
-      setTimeout(() => {
-        client.ping('')
-      }, 10000)
-    })
-    client.on('message', (data: WS.Data, isBinary: boolean) => {
-      this.parser.parse(data, isBinary, this._channelID)
-    })
-    client.on('error', (err: Error) => {
-      this.emit('error', err)
-    })
+      if (!isBrowser()) {
+        // Call first ping event.
+        setTimeout(() => {
+          client.ping('')
+        }, 10000)
+      }
+    }
+    client.onmessage = event => {
+      this.parser.parse(event.data, false, this._channelID)
+    }
+    client.onerror = event => {
+      this.emit('error', event.error)
+    }
   }
 
   /**
@@ -288,29 +291,6 @@ export default class WebSocket extends EventEmitter implements WebSocketInterfac
     this.parser.on('error', (err: Error) => {
       this.emit('parser-error', err)
     })
-  }
-
-  /**
-   * Call ping and wait to pong.
-   */
-  private _checkAlive(timestamp: Dayjs) {
-    const now: Dayjs = dayjs()
-    // Block multiple calling, if multiple pong event occur.
-    // It the duration is less than interval, through ping.
-    if (now.diff(timestamp) > this._heartbeatInterval - 1000 && !this._connectionClosed) {
-      // Skip ping when client is connecting.
-      // https://github.com/websockets/ws/blob/7.2.1/lib/websocket.js#L289
-      if (this._client && this._client.readyState !== WS.CONNECTING) {
-        this._pongWaiting = true
-        this._client.ping('')
-        setTimeout(() => {
-          if (this._pongWaiting) {
-            this._pongWaiting = false
-            this._reconnect()
-          }
-        }, 10000)
-      }
-    }
   }
 }
 

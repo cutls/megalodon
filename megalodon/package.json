@@ -1,6 +1,6 @@
 {
   "name": "@cutls/megalodon",
-  "version": "6.0.0",
+  "version": "6.0.14",
   "description": "Mastodon API client for node.js and browser",
   "main": "./lib/src/index.js",
   "typings": "./lib/src/index.d.ts",
@@ -64,6 +64,7 @@
   "dependencies": {
     "@badgateway/oauth2-client": "^2.3.0",
     "@types/ws": "^8.5.10",
+    "autolinker": "^4.0.0",
     "axios": "1.6.8",
     "dayjs": "^1.11.11",
     "events": "^3.3.0",

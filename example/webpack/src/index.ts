@@ -1,11 +1,13 @@
-import generator, { Entity } from 'megalodon'
+import generator, { Entity } from '../../../megalodon'
 
+// const BASE_URL: string = process.env.MASTODON_URL!
+// const ACCESS_TOKEN: string = process.env.MASTODON_ACCESS_TOKEN!
 const BASE_URL: string = process.env.MASTODON_URL!
 const ACCESS_TOKEN: string = process.env.MASTODON_ACCESS_TOKEN!
 console.log(BASE_URL)
 console.log('start')
 
-const client = generator('mastodon', BASE_URL, ACCESS_TOKEN)
+const client = generator('misskey', BASE_URL, ACCESS_TOKEN)
 
 client.publicStreaming().then(stream => {
   stream.on('connect', () => {

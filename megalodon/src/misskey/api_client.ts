@@ -9,8 +9,29 @@ import MegalodonEntity from '../entity'
 import WebSocket from './web_socket'
 import MisskeyNotificationType from './notification'
 import NotificationType from '../notification'
+import { isBrowser } from '../default'
+import Autolinker from 'autolinker'
 export const isEmojiArr = (item: any): item is MisskeyEntity.Emoji[] => Array.isArray(item)
-
+function autoLinker(input: string, host: string) {
+  return Autolinker.link(input, {
+    hashtag: 'twitter',
+    mention: 'twitter',
+    email: false,
+    stripPrefix: false,
+    replaceFn: function (match) {
+      switch (match.type) {
+        case 'url':
+          return true
+        case 'mention':
+          return `<a href="https://${host}/@${encodeURIComponent(match.getMention())}" target="_blank">@${match.getMention()}</a>`
+        case 'hashtag':
+          console.log('Hashtag: ', match.getHashtag())
+          return `<a href="https://${host}/tags/${encodeURIComponent(match.getHashtag())}" target="_blank">#${match.getHashtag()}</a>`
+      }
+      return false
+    }
+  })
+}
 namespace MisskeyAPI {
   export namespace Entity {
     export type App = MisskeyEntity.App
@@ -246,6 +267,17 @@ namespace MisskeyAPI {
 
     export const note = (n: Entity.Note, host: string): MegalodonEntity.Status => {
       host = host.replace('https://', '')
+      const text = n.text
+        ? n.text
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;')
+            .replace(/`/g, '&#x60;')
+            .replace(/\r?\n/g, '<br>')
+        : ''
+      const html = autoLinker(text, host)
       return {
         id: n.id,
         uri: n.uri ? n.uri : `https://${host}/notes/${n.id}`,
@@ -254,16 +286,7 @@ namespace MisskeyAPI {
         in_reply_to_id: n.replyId,
         in_reply_to_account_id: null,
         reblog: n.renote ? note(n.renote, host) : null,
-        content: n.text
-          ? n.text
-              .replace(/&/g, '&amp;')
-              .replace(/</g, '&lt;')
-              .replace(/>/g, '&gt;')
-              .replace(/"/g, '&quot;')
-              .replace(/'/g, '&#39;')
-              .replace(/`/g, '&#x60;')
-              .replace(/\r?\n/g, '<br>')
-          : '',
+        content: html,
         plain_content: n.text ? n.text : null,
         created_at: n.createdAt,
         edited_at: null,
@@ -309,6 +332,7 @@ namespace MisskeyAPI {
         })
       }
       return Object.keys(r).map(key => {
+        const keyObj = key.replace(/:/g, '')
         const shortcode = key.replace(/[:@.]/g, '')
         const isCustomEmoji = shortcode !== key
         if (myReaction && key === myReaction) {
@@ -316,16 +340,16 @@ namespace MisskeyAPI {
             count: r[key],
             me: true,
             name: shortcode,
-            url: isCustomEmoji ? emojiData[key] || `https://${host}/emoji/${shortcode}.webp` : undefined,
-            static_url: isCustomEmoji ? emojiData[key] || `https://${host}/emoji/${shortcode}.webp` : undefined
+            url: isCustomEmoji ? emojiData[keyObj] || `https://${host}/emoji/${shortcode}.webp` : undefined,
+            static_url: isCustomEmoji ? emojiData[keyObj] || `https://${host}/emoji/${shortcode}.webp` : undefined
           }
         }
         return {
           count: r[key],
           me: false,
           name: shortcode,
-          url: isCustomEmoji ? emojiData[key] || `https://${host}/emoji/${shortcode}.webp` : undefined,
-          static_url: isCustomEmoji ? emojiData[key] || `https://${host}/emoji/${shortcode}.webp` : undefined
+          url: isCustomEmoji ? emojiData[keyObj] || `https://${host}/emoji/${shortcode}.webp` : undefined,
+          static_url: isCustomEmoji ? emojiData[keyObj] || `https://${host}/emoji/${shortcode}.webp` : undefined
         }
       })
     }
@@ -627,11 +651,17 @@ namespace MisskeyAPI {
       if (!this.accessToken) {
         throw new Error('accessToken is required')
       }
-      const url = this.baseUrl + '/streaming'
+      const url = this.baseUrl.replace('https://', 'wss://') + '/streaming'
       const streaming = new WebSocket(url, channel, this.accessToken, listId, this.userAgent)
-      process.nextTick(() => {
-        streaming.start()
-      })
+      if (!isBrowser()) {
+        process.nextTick(() => {
+          streaming.start()
+        })
+      } else {
+        setTimeout(() => {
+          streaming.start()
+        }, 0)
+      }
       return streaming
     }
   }

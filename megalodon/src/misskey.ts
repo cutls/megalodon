@@ -2033,7 +2033,7 @@ export default class Misskey implements MegalodonInterface {
       }
       case 'hashtags': {
         let params = {
-          query: q
+          query: q.replace('#', '')
         }
         if (options) {
           if (options.limit) {
