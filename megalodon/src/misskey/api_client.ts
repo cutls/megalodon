@@ -25,7 +25,6 @@ function autoLinker(input: string, host: string) {
         case 'mention':
           return `<a href="https://${host}/@${encodeURIComponent(match.getMention())}" target="_blank">@${match.getMention()}</a>`
         case 'hashtag':
-          console.log('Hashtag: ', match.getHashtag())
           return `<a href="https://${host}/tags/${encodeURIComponent(match.getHashtag())}" target="_blank">#${match.getHashtag()}</a>`
       }
       return false
