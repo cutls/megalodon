@@ -2270,4 +2270,37 @@ export default class Misskey implements MegalodonInterface {
       resolve(str)
     })
   }
+
+  // ======================================
+  // WebSocket Subscription
+  // ======================================
+
+  public async userStreamingSubscription(): Promise<WebSocketInterface> {
+    return this.userStreaming()
+  }
+
+  public async publicStreamingSubscription(socket: WebSocketInterface): Promise<WebSocketInterface> {
+    socket.subscribe('public', 'globalTimeline')
+    return socket
+  }
+
+  public async localStreamingSubscription(socket: WebSocketInterface): Promise<WebSocketInterface> {
+    socket.subscribe('public:local', 'localTimeline')
+    return socket
+  }
+
+  public async tagStreamingSubscription(socket: WebSocketInterface, _tag: string): Promise<WebSocketInterface> {
+    console.warn('misskey does not support tag streaming')
+    return socket
+  }
+
+  public async listStreamingSubscription(socket: WebSocketInterface, list_id: string): Promise<WebSocketInterface> {
+    socket.subscribe('list', 'userList', { list: list_id })
+    return socket
+  }
+
+  public async directStreamingSubscription(socket: WebSocketInterface): Promise<WebSocketInterface> {
+    console.warn('misskey does not support direct streaming')
+    return socket
+  }
 }

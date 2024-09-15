@@ -1,10 +1,9 @@
 import WS from 'isomorphic-ws'
-import { v4 as uuid } from 'uuid'
 import { EventEmitter } from 'events'
 import { WebSocketInterface } from '../megalodon'
 import MisskeyAPI from './api_client'
 import { isBrowser } from '../default'
-
+type MisskeyTL = 'user' | 'localTimeline' | 'hybridTimeline' | 'globalTimeline' | 'conversation' | 'list'
 /**
  * WebSocket
  * Misskey is not support http streaming. It supports websocket instead of streaming.
@@ -12,7 +11,7 @@ import { isBrowser } from '../default'
  */
 export default class WebSocket extends EventEmitter implements WebSocketInterface {
   public url: string
-  public channel: 'user' | 'localTimeline' | 'hybridTimeline' | 'globalTimeline' | 'conversation' | 'list'
+  public channel: MisskeyTL
   public parser: Parser
   public headers: { [key: string]: string }
   public listId: string | null = null
@@ -32,7 +31,7 @@ export default class WebSocket extends EventEmitter implements WebSocketInterfac
    */
   constructor(
     url: string,
-    channel: 'user' | 'localTimeline' | 'hybridTimeline' | 'globalTimeline' | 'conversation' | 'list',
+    channel: MisskeyTL,
     accessToken: string,
     listId: string | undefined,
     userAgent: string
@@ -54,7 +53,7 @@ export default class WebSocket extends EventEmitter implements WebSocketInterfac
     this._reconnectMaxAttempts = Infinity
     this._reconnectCurrentAttempts = 0
     this._connectionClosed = false
-    this._channelID = uuid()
+    this._channelID = 'user'
   }
 
   /**
@@ -87,6 +86,15 @@ export default class WebSocket extends EventEmitter implements WebSocketInterfac
     this._connectionClosed = true
     this._resetConnection()
     this._resetRetryParams()
+  }
+
+
+  /**
+   * Subscribe stream.
+   */
+
+  public subscribe(channelID: string, stream: string, add?: Record<string, string>) {
+    this._client?.send(JSON.stringify({ type: 'connect', body: { channel: stream, id: channelID, params: add } }))
   }
 
   /**
@@ -279,14 +287,18 @@ export default class WebSocket extends EventEmitter implements WebSocketInterfac
    * Set up parser when receive message.
    */
   private _setupParser() {
-    this.parser.on('update', (note: MisskeyAPI.Entity.Note) => {
-      this.emit('update', MisskeyAPI.Converter.note(note, this.baseUrlToHost(this.url)))
+    this.parser.on('update', (note: MisskeyAPI.Entity.Note, ch: string[]) => {
+      if (note.id) this._client?.send(JSON.stringify({ type: 's', body: { id: note.id } }))
+      this.emit('update', MisskeyAPI.Converter.note(note, this.baseUrlToHost(this.url)), ch)
     })
-    this.parser.on('notification', (notification: MisskeyAPI.Entity.Notification) => {
-      this.emit('notification', MisskeyAPI.Converter.notification(notification, this.baseUrlToHost(this.url)))
+    this.parser.on('notification', (notification: MisskeyAPI.Entity.Notification, ch: string[]) => {
+      this.emit('notification', MisskeyAPI.Converter.notification(notification, this.baseUrlToHost(this.url)), ch)
     })
-    this.parser.on('conversation', (note: MisskeyAPI.Entity.Note) => {
-      this.emit('conversation', MisskeyAPI.Converter.noteToConversation(note, this.baseUrlToHost(this.url)))
+    this.parser.on('conversation', (note: MisskeyAPI.Entity.Note, ch: string[]) => {
+      this.emit('conversation', MisskeyAPI.Converter.noteToConversation(note, this.baseUrlToHost(this.url)), ch)
+    })
+    this.parser.on('delete', (noteId: string, ch: string[]) => {
+      this.emit('delete', noteId, ch)
     })
     this.parser.on('error', (err: Error) => {
       this.emit('parser-error', err)
@@ -303,7 +315,7 @@ export class Parser extends EventEmitter {
    * @param message Message body of websocket.
    * @param channelID Parse only messages which has same channelID.
    */
-  public parse(data: WS.Data, isBinary: boolean, channelID: string) {
+  public parse(data: WS.Data, isBinary: boolean, _channelID: string) {
     const message = isBinary ? data : data.toString()
     if (typeof message !== 'string') {
       this.emit('heartbeat', {})
@@ -331,6 +343,11 @@ export class Parser extends EventEmitter {
 
     try {
       obj = JSON.parse(message)
+      if (obj.type === 'noteUpdated') {
+        if (obj.body.type !== 'deleted') return
+        const noteId = obj.body.id
+        this.emit('delete', noteId)
+      }
       if (obj.type !== 'channel') {
         return
       }
@@ -338,9 +355,6 @@ export class Parser extends EventEmitter {
         return
       }
       body = obj.body
-      if (body.id !== channelID) {
-        return
-      }
     } catch (err) {
       this.emit('error', new Error(`Error parsing websocket reply: ${message}, error message: ${err}`))
       return
@@ -348,15 +362,15 @@ export class Parser extends EventEmitter {
 
     switch (body.type) {
       case 'note':
-        this.emit('update', body.body as MisskeyAPI.Entity.Note)
+        this.emit('update', body.body as MisskeyAPI.Entity.Note, [body.id])
         break
       case 'notification':
-        this.emit('notification', body.body as MisskeyAPI.Entity.Notification)
+        this.emit('notification', body.body as MisskeyAPI.Entity.Notification, [body.id])
         break
       case 'mention': {
         const note = body.body as MisskeyAPI.Entity.Note
         if (note.visibility === 'specified') {
-          this.emit('conversation', note)
+          this.emit('conversation', note, [body.id])
         }
         break
       }

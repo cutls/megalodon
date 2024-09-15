@@ -17,6 +17,7 @@ export interface WebSocketInterface {
   once(event: string | symbol, listener: (...args: any[]) => void): this
   removeListener(event: string | symbol, listener: (...args: any[]) => void): this
   removeAllListeners(event?: string | symbol): this
+  subscribe(name: string, stream: string, add?: Record<string, string>): void
 }
 
 export interface MegalodonInterface {
@@ -1388,6 +1389,12 @@ export interface MegalodonInterface {
   tagStreaming(tag: string): Promise<WebSocketInterface>
   listStreaming(list_id: string): Promise<WebSocketInterface>
   directStreaming(): Promise<WebSocketInterface>
+  userStreamingSubscription(): Promise<WebSocketInterface>
+  publicStreamingSubscription(tream: WebSocketInterface): Promise<WebSocketInterface>
+  localStreamingSubscription(tream: WebSocketInterface): Promise<WebSocketInterface>
+  tagStreamingSubscription(tream: WebSocketInterface, tag: string): Promise<WebSocketInterface>
+  listStreamingSubscription(tream: WebSocketInterface, list_id: string): Promise<WebSocketInterface>
+  directStreamingSubscription(tream: WebSocketInterface): Promise<WebSocketInterface>
 }
 
 export class NotImplementedError extends Error {

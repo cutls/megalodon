@@ -12,7 +12,7 @@ import { isBrowser } from '../default'
  */
 export default class Streaming extends EventEmitter implements WebSocketInterface {
   public url: string
-  public stream: string
+  public stream?: string
   public params: string | null
   public parser: Parser
   public headers: { [key: string]: string }
@@ -32,7 +32,7 @@ export default class Streaming extends EventEmitter implements WebSocketInterfac
    * @param accessToken The access token.
    * @param userAgent The specified User Agent.
    */
-  constructor(url: string, stream: string, params: string | undefined, accessToken: string, userAgent: string) {
+  constructor(url: string, stream: string | undefined, params: string | undefined, accessToken: string, userAgent: string) {
     super()
     this.url = url
     this.stream = stream
@@ -80,6 +80,13 @@ export default class Streaming extends EventEmitter implements WebSocketInterfac
     this._connectionClosed = true
     this._resetConnection()
     this._resetRetryParams()
+  }
+
+  /**
+   * Subscribe stream.
+   */
+  public subscribe(name: string, _stream: string, add?: Record<string, string>) {
+    this._client?.send(JSON.stringify({ type: 'subscribe', stream: name, ...add }))
   }
 
   /**
@@ -142,8 +149,8 @@ export default class Streaming extends EventEmitter implements WebSocketInterfac
    * @param headers The specified headers.
    * @return A WebSocket instance.
    */
-  private _connect(url: string, stream: string, params: string | null, accessToken: string, headers: { [key: string]: string }): WS {
-    const parameter: Array<string> = [`stream=${stream}`]
+  private _connect(url: string, stream: string | undefined, params: string | null, accessToken: string, headers: { [key: string]: string }): WS {
+    const parameter: Array<string> = stream ? [`stream=${stream}`] : []
 
     if (params) {
       parameter.push(params)
@@ -229,25 +236,25 @@ export default class Streaming extends EventEmitter implements WebSocketInterfac
    * Set up parser when receive message.
    */
   private _setupParser() {
-    this.parser.on('update', (status: MastodonAPI.Entity.Status) => {
-      this.emit('update', MastodonAPI.Converter.status(status))
+    this.parser.on('update', (status: MastodonAPI.Entity.Status, ch: string[]) => {
+      this.emit('update', MastodonAPI.Converter.status(status), ch)
     })
-    this.parser.on('notification', (notification: MastodonAPI.Entity.Notification) => {
+    this.parser.on('notification', (notification: MastodonAPI.Entity.Notification, ch: string[]) => {
       const n = MastodonAPI.Converter.notification(notification)
       if (n instanceof UnknownNotificationTypeError) {
         console.warn(`Unknown notification event has received: ${notification}`)
       } else {
-        this.emit('notification', n)
+        this.emit('notification', n, ch)
       }
     })
-    this.parser.on('delete', (id: string) => {
-      this.emit('delete', id)
+    this.parser.on('delete', (id: string, ch: string[]) => {
+      this.emit('delete', id, ch)
     })
-    this.parser.on('conversation', (conversation: MastodonAPI.Entity.Conversation) => {
-      this.emit('conversation', MastodonAPI.Converter.conversation(conversation))
+    this.parser.on('conversation', (conversation: MastodonAPI.Entity.Conversation, ch: string[]) => {
+      this.emit('conversation', MastodonAPI.Converter.conversation(conversation), ch)
     })
-    this.parser.on('status_update', (status: MastodonAPI.Entity.Status) => {
-      this.emit('status_update', MastodonAPI.Converter.status(status))
+    this.parser.on('status_update', (status: MastodonAPI.Entity.Status, ch: string[]) => {
+      this.emit('status_update', MastodonAPI.Converter.status(status), ch)
     })
     this.parser.on('error', (err: Error) => {
       this.emit('parser-error', err)
@@ -302,6 +309,7 @@ export class Parser extends EventEmitter {
       return
     }
 
+    let ch: string[] = []
     let event = ''
     let payload = ''
     let mes = {}
@@ -309,6 +317,7 @@ export class Parser extends EventEmitter {
       const obj = JSON.parse(message)
       event = obj.event
       payload = obj.payload
+      ch = obj.stream || []
       mes = JSON.parse(payload)
     } catch (err) {
       // delete event does not have json object
@@ -320,19 +329,19 @@ export class Parser extends EventEmitter {
 
     switch (event) {
       case 'update':
-        this.emit('update', mes as MastodonAPI.Entity.Status)
+        this.emit('update', mes as MastodonAPI.Entity.Status, ch)
         break
       case 'notification':
-        this.emit('notification', mes as MastodonAPI.Entity.Notification)
+        this.emit('notification', mes as MastodonAPI.Entity.Notification, ch)
         break
       case 'conversation':
-        this.emit('conversation', mes as MastodonAPI.Entity.Conversation)
+        this.emit('conversation', mes as MastodonAPI.Entity.Conversation, ch)
         break
       case 'delete':
         this.emit('delete', payload)
         break
       case 'status.update':
-        this.emit('status_update', mes as MastodonAPI.Entity.Status)
+        this.emit('status_update', mes as MastodonAPI.Entity.Status, ch)
         break
       default:
         this.emit('error', new Error(`Unknown event has received: ${message}`))

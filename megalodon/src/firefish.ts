@@ -2393,4 +2393,32 @@ export default class Firefish implements MegalodonInterface {
     const url = await this.streamingURL()
     return this.client.socket(url, 'conversation')
   }
+
+  // ======================================
+  // WebSocket Subscription Fallback
+  // ======================================
+
+  public async userStreamingSubscription(): Promise<WebSocketInterface> {
+    return this.userStreaming()
+  }
+
+  public async publicStreamingSubscription(_socket: any): Promise<WebSocketInterface> {
+    return this.publicStreaming()
+  }
+
+  public async localStreamingSubscription(_socket: any): Promise<WebSocketInterface> {
+    return this.localStreaming()
+  }
+
+  public async tagStreamingSubscription(_socket: any, tag: string): Promise<WebSocketInterface> {
+    return this.tagStreaming(tag)
+  }
+
+  public async listStreamingSubscription(_socket: any, list_id: string): Promise<WebSocketInterface> {
+    return this.listStreaming(list_id)
+  }
+
+  public async directStreamingSubscription(_socket: any): Promise<WebSocketInterface> {
+    return this.directStreaming()
+  }
 }

@@ -2702,4 +2702,32 @@ export default class Gotosocial implements MegalodonInterface {
     const url = await this.streamingURL()
     return this.client.socket(`${url}/api/v1/streaming`, 'direct')
   }
+
+  // ======================================
+  // WebSocket Subscription Fallback
+  // ======================================
+
+  public async userStreamingSubscription(): Promise<Streaming> {
+    return this.userStreaming()
+  }
+
+  public async publicStreamingSubscription(_socket: any): Promise<Streaming> {
+    return this.publicStreaming()
+  }
+
+  public async localStreamingSubscription(_socket: any): Promise<Streaming> {
+    return this.localStreaming()
+  }
+
+  public async tagStreamingSubscription(_socket: any, tag: string): Promise<Streaming> {
+    return this.tagStreaming(tag)
+  }
+
+  public async listStreamingSubscription(_socket: any, list_id: string): Promise<Streaming> {
+    return this.listStreaming(list_id)
+  }
+
+  public async directStreamingSubscription(_socket: any): Promise<Streaming> {
+    return this.directStreaming()
+  }
 }

@@ -3196,4 +3196,44 @@ export default class Mastodon implements MegalodonInterface {
     const url = await this.streamingURL()
     return this.client.socket(`${url}/api/v1/streaming`, 'direct')
   }
+
+  // ======================================
+  // WebSocket Subscription
+  // ======================================
+
+  public async userStreamingSubscription(): Promise<Streaming> {
+    const url = await this.streamingURL()
+    return new Promise((resolve, _) => {
+      const socket = this.client.socket(`${url}/api/v1/streaming`)
+      socket.on('connect', () => {
+        socket.subscribe('user', 'user')
+        resolve(socket)
+      })
+    })
+  }
+
+  public async publicStreamingSubscription(socket: Streaming): Promise<Streaming> {
+    socket.subscribe('public', 'public')
+    return socket
+  }
+
+  public async localStreamingSubscription(socket: Streaming): Promise<Streaming> {
+    socket.subscribe('public:local', 'public:local')
+    return socket
+  }
+
+  public async tagStreamingSubscription(socket: Streaming, tag: string): Promise<Streaming> {
+    socket.subscribe('hashtag', 'hashtag', { tag })
+    return socket
+  }
+
+  public async listStreamingSubscription(socket: Streaming, list_id: string): Promise<Streaming> {
+    socket.subscribe('list', 'list', { list: list_id })
+    return socket
+  }
+
+  public async directStreamingSubscription(socket: Streaming): Promise<Streaming> {
+    socket.subscribe('direct', 'direct')
+    return socket
+  }
 }

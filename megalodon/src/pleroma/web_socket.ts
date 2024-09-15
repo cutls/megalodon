@@ -84,6 +84,8 @@ export default class WebSocket extends EventEmitter implements WebSocketInterfac
     this._resetRetryParams()
   }
 
+  public subscribe(_name: string, _stream: string, _add?: Record<string, string>) {}
+
   /**
    * Clean up current connection, and listeners.
    */
