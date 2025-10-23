@@ -158,6 +158,7 @@ export default class Streaming extends EventEmitter implements WebSocketInterfac
 
     if (accessToken !== null) {
       parameter.push(`access_token=${accessToken}`)
+      headers.Authorization = `Bearer ${accessToken}`
     }
     const requestURL = `${url}?${parameter.join('&')}`
     if (isBrowser()) {
