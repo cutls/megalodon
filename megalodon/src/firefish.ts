@@ -30,7 +30,7 @@ export default class Firefish implements MegalodonInterface {
     this.baseUrl = baseUrl
   }
 
-  public cancel(): void {
+  public cancel() {
     return this.client.cancel()
   }
 
@@ -972,7 +972,7 @@ export default class Firefish implements MegalodonInterface {
         scope: ['client', 'base']
       })
       .then(res => {
-        if (!res.data || (res.data != 'public' && res.data != 'home' && res.data != 'followers' && res.data != 'specified')) return 'public'
+        if (!res.data || (res.data !== 'public' && res.data !== 'home' && res.data !== 'followers' && res.data !== 'specified')) return 'public'
         return FirefishAPI.Converter.visibility(res.data)
       })
       .catch(_ => 'public')

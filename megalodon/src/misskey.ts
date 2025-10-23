@@ -33,7 +33,7 @@ export default class Misskey implements MegalodonInterface {
     return baseUrl.replace('https://', '')
   }
 
-  public cancel(): void {
+  public cancel() {
     return this.client.cancel()
   }
 
@@ -560,6 +560,13 @@ export default class Misskey implements MegalodonInterface {
   public async unpinAccount(_id: string): Promise<Response<Entity.Relationship>> {
     return new Promise((_, reject) => {
       const err = new NotImplementedError('misskey does not support')
+      reject(err)
+    })
+  }
+
+  public async setAccountNote(_id: string): Promise<Response<Entity.Relationship>> {
+    return new Promise((_, reject) => {
+      const err = new NotImplementedError('Firefish does not support this method')
       reject(err)
     })
   }

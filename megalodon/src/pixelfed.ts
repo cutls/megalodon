@@ -33,8 +33,9 @@ export default class Pixelfed implements MegalodonInterface {
     this.client = new PixelfedAPI.Client(baseUrl, token, agent)
     this.baseUrl = baseUrl
   }
+  
 
-  public cancel(): void {
+  public cancel() {
     return this.client.cancel()
   }
 
@@ -3070,26 +3071,55 @@ export default class Pixelfed implements MegalodonInterface {
   }
 
   public async userStreaming(): Promise<WebSocketInterface> {
-    return this.client.socket()
+    return this.client.socket() as any
   }
 
   public async publicStreaming(): Promise<WebSocketInterface> {
-    return this.client.socket()
+    return this.client.socket() as any
   }
 
   public async localStreaming(): Promise<WebSocketInterface> {
-    return this.client.socket()
+    return this.client.socket() as any
   }
 
   public async tagStreaming(_tag: string): Promise<WebSocketInterface> {
-    return this.client.socket()
+    return this.client.socket() as any
   }
 
   public async listStreaming(_list_id: string): Promise<WebSocketInterface> {
-    return this.client.socket()
+    return this.client.socket() as any
   }
 
   public async directStreaming(): Promise<WebSocketInterface> {
-    return this.client.socket()
+    return this.client.socket() as any
+  }
+
+  public async userStreamingSubscription(): Promise<WebSocketInterface> {
+    return this.userStreaming()
+  }
+
+  public async publicStreamingSubscription(socket: WebSocketInterface): Promise<WebSocketInterface> {
+    socket.subscribe('public', 'globalTimeline')
+    return socket
+  }
+
+  public async localStreamingSubscription(socket: WebSocketInterface): Promise<WebSocketInterface> {
+    socket.subscribe('public:local', 'localTimeline')
+    return socket
+  }
+
+  public async tagStreamingSubscription(socket: WebSocketInterface, _tag: string): Promise<WebSocketInterface> {
+    console.warn('misskey does not support tag streaming')
+    return socket
+  }
+
+  public async listStreamingSubscription(socket: WebSocketInterface, list_id: string): Promise<WebSocketInterface> {
+    socket.subscribe('list', 'userList', { list: list_id })
+    return socket
+  }
+
+  public async directStreamingSubscription(socket: WebSocketInterface): Promise<WebSocketInterface> {
+    console.warn('misskey does not support direct streaming')
+    return socket
   }
 }
