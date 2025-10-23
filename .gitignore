@@ -8,3 +8,4 @@ docs/
 .yarn/*
 !.yarn/releases
 *.sh
+.DS_Store
