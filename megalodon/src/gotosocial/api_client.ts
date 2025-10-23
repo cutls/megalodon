@@ -1,14 +1,14 @@
 import axios, { AxiosResponse, AxiosRequestConfig } from 'axios'
 import objectAssignDeep from 'object-assign-deep'
 
-import Streaming from './web_socket'
-import Response from '../response'
-import { RequestCanceledError } from '../cancel'
-import { NO_REDIRECT, DEFAULT_SCOPE, DEFAULT_UA } from '../default'
-import GotosocialEntity from './entity'
-import MegalodonEntity from '../entity'
-import NotificationType, { UnknownNotificationTypeError } from '../notification'
-import GotosocialNotificationType from './notification'
+import Streaming from './web_socket.js'
+import Response from '../response.js'
+import { RequestCanceledError } from '../cancel.js'
+import { NO_REDIRECT, DEFAULT_SCOPE, DEFAULT_UA } from '../default.js'
+import GotosocialEntity from './entity.js'
+import MegalodonEntity from '../entity.js'
+import NotificationType, { UnknownNotificationTypeError } from '../notification.js'
+import GotosocialNotificationType from './notification.js'
 
 namespace GotosocialAPI {
   /**
@@ -410,6 +410,7 @@ namespace GotosocialAPI {
     export type Status = GotosocialEntity.Status
     export type StatusParams = GotosocialEntity.StatusParams
     export type StatusSource = GotosocialEntity.StatusSource
+    export type StatusVisibility = GotosocialEntity.StatusVisibility
     export type Tag = GotosocialEntity.Tag
     export type Token = GotosocialEntity.Token
     export type URLs = GotosocialEntity.URLs
@@ -459,6 +460,36 @@ namespace GotosocialAPI {
           return NotificationType.PollExpired
         default:
           return new UnknownNotificationTypeError()
+      }
+    }
+
+    export const visibility = (v: GotosocialAPI.Entity.StatusVisibility): MegalodonEntity.StatusVisibility => {
+      switch (v) {
+        case 'public':
+          return 'public'
+        case 'unlisted':
+          return 'unlisted'
+        case 'private':
+          return 'private'
+        case 'direct':
+          return 'direct'
+        case 'local':
+          return 'local'
+      }
+    }
+
+    export const encodeVisibility = (v: MegalodonEntity.StatusVisibility): GotosocialAPI.Entity.StatusVisibility => {
+      switch (v) {
+        case 'public':
+          return 'public'
+        case 'unlisted':
+          return 'unlisted'
+        case 'private':
+          return 'private'
+        case 'direct':
+          return 'direct'
+        case 'local':
+          return 'local'
       }
     }
 
@@ -641,7 +672,7 @@ namespace GotosocialAPI {
       muted: s.muted,
       sensitive: s.sensitive,
       spoiler_text: s.spoiler_text,
-      visibility: s.visibility,
+      visibility: visibility(s.visibility),
       media_attachments: Array.isArray(s.media_attachments) ? s.media_attachments.map(m => attachment(m)) : [],
       mentions: Array.isArray(s.mentions) ? s.mentions.map(m => mention(m)) : [],
       tags: s.tags,

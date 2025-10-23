@@ -1,13 +1,13 @@
-/* eslint-disable @typescript-eslint/ban-types */
-import Response from './response'
-import OAuth from './oauth'
-import Pleroma from './pleroma'
-import Mastodon from './mastodon'
-import Misskey from './misskey'
-import Entity from './entity'
-import Friendica from './friendica'
-import Firefish from './firefish'
-import Gotosocial from './gotosocial'
+import Response from './response.js'
+import OAuth from './oauth.js'
+import Pleroma from './pleroma.js'
+import Mastodon from './mastodon.js'
+import Entity from './entity.js'
+import Friendica from './friendica.js'
+import Firefish from './firefish.js'
+import Gotosocial from './gotosocial.js'
+import Pixelfed from './pixelfed.js'
+import Misskey from './misskey.js'
 
 export interface WebSocketInterface {
   start(): void
@@ -172,6 +172,7 @@ export interface MegalodonInterface {
    * @param options.exclude_replies Return statuses which exclude replies.
    * @param options.exclude_reblogs Return statuses which exclude reblogs.
    * @param options.only_media Show only statuses with media attached? Defaults to false.
+   * @param options.only_public Return statuses with public visibility only.
    * @return Account's statuses.
    */
   getAccountStatuses(
@@ -185,6 +186,7 @@ export interface MegalodonInterface {
       exclude_replies?: boolean
       exclude_reblogs?: boolean
       only_media?: boolean
+      only_public?: boolean
     }
   ): Promise<Response<Array<Entity.Status>>>
   /**
@@ -337,6 +339,14 @@ export interface MegalodonInterface {
    * @return Relationship
    */
   unpinAccount(id: string): Promise<Response<Entity.Relationship>>
+  /**
+   * Sets a private note on a user.
+   *
+   * @param id The account ID.
+   * @param note The comment to be set on that user.
+   * @return Relationship
+   */
+  setAccountNote(id: string, note?: string): Promise<Response<Entity.Relationship>>
   /**
    * Find out whether a given account is followed, blocked, muted, etc.
    *
@@ -1176,9 +1186,8 @@ export interface MegalodonInterface {
    *
    * @param id A single notification ID to read
    * @param max_id Read all notifications up to this ID
-   * @return Array of notifications
    */
-  readNotifications(options: { id?: string; max_id?: string }): Promise<Response<Entity.Notification | Array<Entity.Notification>>>
+  readNotifications(options: { id?: string; max_id?: string }): Promise<Response<{}>>
   // ======================================
   // notifications/push
   // ======================================
@@ -1436,14 +1445,14 @@ export class NodeinfoError extends Error {
 /**
  * Get client for each SNS according to megalodon interface.
  *
- * @param sns Name of your SNS, `mastodon`, `pleroma`, `firefish`, or `gotosocial`.
+ * @param sns Name of your SNS, `mastodon`, `pleroma`, `firefish`, `gotosocial`, or `pixelfed`.
  * @param baseUrl hostname or base URL.
  * @param accessToken access token from OAuth2 authorization
  * @param userAgent UserAgent is specified in header on request.
  * @return Client instance for each SNS you specified.
  */
 const generator = (
-  sns: 'mastodon' | 'pleroma' | 'friendica' | 'firefish' | 'gotosocial' | 'misskey',
+  sns: 'mastodon' | 'pleroma' | 'friendica' | 'firefish' | 'gotosocial' | 'pixelfed' | 'misskey',
   baseUrl: string,
   accessToken: string | null = null,
   userAgent: string | null = null
@@ -1472,6 +1481,10 @@ const generator = (
     case 'misskey': {
       const misskey = new Misskey(baseUrl, accessToken, userAgent)
       return misskey
+    }
+    case 'pixelfed': {
+      const pixelfed = new Pixelfed(baseUrl, accessToken, userAgent)
+      return pixelfed
     }
   }
 }

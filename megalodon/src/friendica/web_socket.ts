@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-empty-function */
-import { WebSocketInterface } from '../megalodon'
+import { WebSocketInterface } from '../megalodon.js'
 import { EventEmitter } from 'events'
 
 export default class WebSocket extends EventEmitter implements WebSocketInterface {

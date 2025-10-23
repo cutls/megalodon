@@ -1,10 +1,10 @@
 import WS from 'isomorphic-ws'
 import dayjs, { Dayjs } from 'dayjs'
 import { EventEmitter } from 'events'
-import { WebSocketInterface } from '../megalodon'
-import MastodonAPI from './api_client'
-import { UnknownNotificationTypeError } from '../notification'
-import { isBrowser } from '../default'
+import { WebSocketInterface } from '../megalodon.js'
+import MastodonAPI from './api_client.js'
+import { UnknownNotificationTypeError } from '../notification.js'
+import { isBrowser } from '../default.js'
 
 /**
  * Streaming
@@ -27,8 +27,8 @@ export default class Streaming extends EventEmitter implements WebSocketInterfac
   private _pongWaiting = false
 
   /**
-   * @param url Full url of websocket: e.g. https://pleroma.io/api/v1/streaming
-   * @param stream Stream name, please refer: https://git.pleroma.social/pleroma/pleroma/blob/develop/lib/pleroma/web/mastodon_api/mastodon_socket.ex#L19-28
+   * @param url Full url of websocket: e.g. https://mastodon.social/api/v1/streaming
+   * @param stream Stream name
    * @param accessToken The access token.
    * @param userAgent The specified User Agent.
    */

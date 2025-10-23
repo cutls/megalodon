@@ -1,14 +1,14 @@
 import axios, { AxiosResponse, AxiosRequestConfig } from 'axios'
 import objectAssignDeep from 'object-assign-deep'
 
-import MegalodonEntity from '../entity'
-import PleromaEntity from './entity'
-import Response from '../response'
-import { RequestCanceledError } from '../cancel'
-import { NO_REDIRECT, DEFAULT_SCOPE, DEFAULT_UA } from '../default'
-import WebSocket from './web_socket'
-import NotificationType, { UnknownNotificationTypeError } from '../notification'
-import PleromaNotificationType from './notification'
+import MegalodonEntity from '../entity.js'
+import PleromaEntity from './entity.js'
+import Response from '../response.js'
+import { RequestCanceledError } from '../cancel.js'
+import { NO_REDIRECT, DEFAULT_SCOPE, DEFAULT_UA } from '../default.js'
+import WebSocket from './web_socket.js'
+import NotificationType, { UnknownNotificationTypeError } from '../notification.js'
+import PleromaNotificationType from './notification.js'
 
 namespace PleromaAPI {
   export namespace Entity {
@@ -44,6 +44,7 @@ namespace PleromaAPI {
     export type Source = PleromaEntity.Source
     export type Stats = PleromaEntity.Stats
     export type Status = PleromaEntity.Status
+    export type StatusVisibility = PleromaEntity.StatusVisibility
     export type StatusParams = PleromaEntity.StatusParams
     export type StatusSource = PleromaEntity.StatusSource
     export type Tag = PleromaEntity.Tag
@@ -74,6 +75,8 @@ namespace PleromaAPI {
           return NotificationType.Update
         case PleromaNotificationType.Move:
           return NotificationType.Move
+        case PleromaNotificationType.Status:
+          return NotificationType.Status
         default:
           return new UnknownNotificationTypeError()
       }
@@ -100,8 +103,40 @@ namespace PleromaAPI {
           return PleromaNotificationType.Update
         case NotificationType.Move:
           return PleromaNotificationType.Move
+        case NotificationType.Status:
+          return PleromaNotificationType.Status
         default:
           return new UnknownNotificationTypeError()
+      }
+    }
+
+    export const visibility = (v: PleromaAPI.Entity.StatusVisibility): MegalodonEntity.StatusVisibility => {
+      switch (v) {
+        case 'public':
+          return 'public'
+        case 'unlisted':
+          return 'unlisted'
+        case 'private':
+          return 'private'
+        case 'direct':
+          return 'direct'
+        case 'local':
+          return 'local'
+      }
+    }
+
+    export const encodeVisibility = (v: MegalodonEntity.StatusVisibility): PleromaAPI.Entity.StatusVisibility => {
+      switch (v) {
+        case 'public':
+          return 'public'
+        case 'unlisted':
+          return 'unlisted'
+        case 'private':
+          return 'private'
+        case 'direct':
+          return 'direct'
+        case 'local':
+          return 'local'
       }
     }
 
@@ -395,7 +430,7 @@ namespace PleromaAPI {
       muted: s.muted,
       sensitive: s.sensitive,
       spoiler_text: s.spoiler_text,
-      visibility: s.visibility,
+      visibility: visibility(s.visibility),
       media_attachments: Array.isArray(s.media_attachments) ? s.media_attachments.map(m => attachment(m)) : [],
       mentions: Array.isArray(s.mentions) ? s.mentions.map(m => mention(m)) : [],
       tags: s.tags,
@@ -415,7 +450,7 @@ namespace PleromaAPI {
         media_ids: Array.isArray(s.media_ids) ? s.media_ids : null,
         sensitive: s.sensitive,
         spoiler_text: s.spoiler_text,
-        visibility: s.visibility,
+        visibility: s.visibility ? visibility(s.visibility) : null,
         scheduled_at: s.scheduled_at,
         application_id: null
       }

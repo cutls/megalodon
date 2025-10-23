@@ -1,7 +1,8 @@
 {
-  "name": "example",
+  "name": "node-cjs",
   "version": "4.0.0",
   "private": true,
+  "type": "commonjs",
   "scripts": {
     "build": "tsc -p ./",
     "lint": "eslint --ext .js,.ts src"
@@ -9,12 +10,12 @@
   "author": "h3poteto",
   "license": "MIT",
   "dependencies": {
-    "@cutls/megalodon": "5.1.6",
     "megalodon": "*",
     "typescript": "5.4.5"
   },
   "devDependencies": {
-    "@types/node": "^20.12.7",
+    "@types/node": "^22.15.31",
+    "eslint": "^9.31.0",
     "log4js": "^6.9.1"
   }
 }

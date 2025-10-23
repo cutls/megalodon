@@ -3,16 +3,16 @@ import { OAuth2Client } from '@badgateway/oauth2-client'
 import FormData from 'form-data'
 import dayjs from 'dayjs'
 
-import { parseLinkHeader } from './parse_link_header'
-import MastodonAPI from './mastodon/api_client'
-import Streaming from './mastodon/web_socket'
-import { MegalodonInterface, NotImplementedError } from './megalodon'
-import Response from './response'
-import Entity from './entity'
-import { NO_REDIRECT, DEFAULT_SCOPE, DEFAULT_UA } from './default'
-import OAuth from './oauth'
-import * as MastodonOAuth from './mastodon/oauth'
-import { UnknownNotificationTypeError } from './notification'
+import { parseLinkHeader } from './parse_link_header.js'
+import MastodonAPI from './mastodon/api_client.js'
+import Streaming from './mastodon/web_socket.js'
+import { MegalodonInterface, NotImplementedError } from './megalodon.js'
+import Response from './response.js'
+import Entity from './entity.js'
+import { NO_REDIRECT, DEFAULT_SCOPE, DEFAULT_UA } from './default.js'
+import OAuth from './oauth.js'
+import * as MastodonOAuth from './mastodon/oauth.js'
+import { UnknownNotificationTypeError } from './notification.js'
 
 export default class Mastodon implements MegalodonInterface {
   public client: MastodonAPI.Interface
@@ -565,6 +565,9 @@ export default class Mastodon implements MegalodonInterface {
         converted = Object.assign({}, converted, {
           data: [...converted.data, ...nextRes.data.map(a => MastodonAPI.Converter.account(a))]
         })
+        if (nextRes.headers.link === undefined) {
+          break
+        }
         parsed = parseLinkHeader(nextRes.headers.link)
         if (sleep_ms) {
           await new Promise<void>(converted => setTimeout(converted, sleep_ms))
@@ -722,6 +725,27 @@ export default class Mastodon implements MegalodonInterface {
    */
   public async unpinAccount(id: string): Promise<Response<Entity.Relationship>> {
     return this.client.post<MastodonAPI.Entity.Relationship>(`/api/v1/accounts/${id}/unpin`).then(res => {
+      return Object.assign(res, {
+        data: MastodonAPI.Converter.relationship(res.data)
+      })
+    })
+  }
+
+  /**
+   * POST /api/v1/accounts/:id/note
+   *
+   * @param id
+   * @param note
+   * @return Relationship
+   */
+  public async setAccountNote(id: string, note?: string): Promise<Response<Entity.Relationship>> {
+    let params = {}
+    if (note) {
+      params = Object.assign(params, {
+        comment: note
+      })
+    }
+    return this.client.post<MastodonAPI.Entity.Relationship>(`/api/v1/accounts/${id}/note`, params).then(res => {
       return Object.assign(res, {
         data: MastodonAPI.Converter.relationship(res.data)
       })
@@ -1584,7 +1608,7 @@ export default class Mastodon implements MegalodonInterface {
       }
       if (options.visibility) {
         params = Object.assign(params, {
-          visibility: options.visibility
+          visibility: MastodonAPI.Converter.encodeVisibility(options.visibility)
         })
       }
       if (options.scheduled_at && dayjs(options.scheduled_at).diff(dayjs(), 'seconds') > 300) {
@@ -2783,10 +2807,7 @@ export default class Mastodon implements MegalodonInterface {
     return this.client.post<{}>(`/api/v1/notifications/${id}/dismiss`)
   }
 
-  public readNotifications(_options: {
-    id?: string
-    max_id?: string
-  }): Promise<Response<Entity.Notification | Array<Entity.Notification>>> {
+  public readNotifications(_options: { id?: string; max_id?: string }): Promise<Response<{}>> {
     return new Promise((_, reject) => {
       const err = new NotImplementedError('Mastodon does not support this method')
       reject(err)

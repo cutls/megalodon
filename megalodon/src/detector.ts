@@ -1,5 +1,5 @@
 import axios, { AxiosRequestConfig } from 'axios'
-import { NodeinfoError } from './megalodon'
+import { NodeinfoError } from './megalodon.js'
 
 const NODEINFO_10 = 'http://nodeinfo.diaspora.software/ns/schema/1.0'
 const NODEINFO_20 = 'http://nodeinfo.diaspora.software/ns/schema/2.0'
@@ -47,7 +47,7 @@ type Metadata = {
  * @param proxyConfig Proxy setting, or set false if don't use proxy.
  * @return SNS name.
  */
-export const detector = async (url: string): Promise<'mastodon' | 'pleroma' | 'friendica' | 'firefish' | 'gotosocial' | 'misskey'> => {
+export const detector = async (url: string): Promise<'mastodon' | 'pleroma' | 'friendica' | 'firefish' | 'gotosocial' | 'pixelfed' | 'misskey'> => {
   const options: AxiosRequestConfig = {
     timeout: 20000
   }
@@ -59,22 +59,28 @@ export const detector = async (url: string): Promise<'mastodon' | 'pleroma' | 'f
     case NODEINFO_10: {
       const res = await axios.get<Nodeinfo10>(link.href, options)
       switch (res.data.software.name) {
-        case 'pleroma':
-          return 'pleroma'
         case 'akkoma':
           return 'pleroma'
-        case 'mastodon':
-          return 'mastodon'
-        case 'friendica':
-          return 'friendica'
         case 'firefish':
           return 'firefish'
-        case 'iceshrimp':
-          return 'firefish'
+        case 'friendica':
+          return 'friendica'
         case 'gotosocial':
           return 'gotosocial'
+        case 'hometown':
+          return 'mastodon'
+        case 'iceshrimp':
+          return 'firefish'
+        case 'mastodon':
+          return 'mastodon'
+        case 'pixelfed':
+          return 'pixelfed'
+        case 'pleroma':
+          return 'pleroma'
+        case 'sharkey':
+          return 'mastodon'
         default:
-          if (res.data.metadata.upstream?.name && res.data.metadata.upstream.name === 'mastodon') {
+          if (res.data.metadata.upstream?.name && res.data.metadata.upstream.name.toLowerCase() === 'mastodon') {
             return 'mastodon'
           }
           throw new NodeinfoError('Unknown SNS')
@@ -83,22 +89,28 @@ export const detector = async (url: string): Promise<'mastodon' | 'pleroma' | 'f
     case NODEINFO_20: {
       const res = await axios.get<Nodeinfo20>(link.href, options)
       switch (res.data.software.name) {
-        case 'pleroma':
-          return 'pleroma'
         case 'akkoma':
           return 'pleroma'
-        case 'mastodon':
-          return 'mastodon'
-        case 'friendica':
-          return 'friendica'
         case 'firefish':
           return 'firefish'
-        case 'iceshrimp':
-          return 'firefish'
+        case 'friendica':
+          return 'friendica'
         case 'gotosocial':
           return 'gotosocial'
+        case 'hometown':
+          return 'mastodon'
+        case 'iceshrimp':
+          return 'firefish'
+        case 'mastodon':
+          return 'mastodon'
+        case 'pixelfed':
+          return 'pixelfed'
+        case 'pleroma':
+          return 'pleroma'
+        case 'sharkey':
+          return 'mastodon'
         default:
-          if (res.data.metadata.upstream?.name && res.data.metadata.upstream.name === 'mastodon') {
+          if (res.data.metadata.upstream?.name && res.data.metadata.upstream.name.toLowerCase() === 'mastodon') {
             return 'mastodon'
           }
           throw new NodeinfoError('Unknown SNS')
@@ -107,24 +119,30 @@ export const detector = async (url: string): Promise<'mastodon' | 'pleroma' | 'f
     case NODEINFO_21: {
       const res = await axios.get<Nodeinfo21>(link.href, options)
       switch (res.data.software.name) {
-        case 'pleroma':
-          return 'pleroma'
         case 'akkoma':
           return 'pleroma'
-        case 'mastodon':
-          return 'mastodon'
-        case 'friendica':
-          return 'friendica'
         case 'firefish':
           return 'firefish'
-        case 'iceshrimp':
-          return 'firefish'
+        case 'friendica':
+          return 'friendica'
         case 'gotosocial':
           return 'gotosocial'
         case 'misskey':
           return 'misskey'
+        case 'hometown':
+          return 'mastodon'
+        case 'iceshrimp':
+          return 'firefish'
+        case 'mastodon':
+          return 'mastodon'
+        case 'pixelfed':
+          return 'pixelfed'
+        case 'pleroma':
+          return 'pleroma'
+        case 'sharkey':
+          return 'mastodon'
         default:
-          if (res.data.metadata.upstream?.name && res.data.metadata.upstream.name === 'mastodon') {
+          if (res.data.metadata.upstream?.name && res.data.metadata.upstream.name.toLowerCase() === 'mastodon') {
             return 'mastodon'
           }
           throw new NodeinfoError('Unknown SNS')

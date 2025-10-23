@@ -3,16 +3,16 @@ import { OAuth2Client } from '@badgateway/oauth2-client'
 import FormData from 'form-data'
 import dayjs from 'dayjs'
 
-import { parseLinkHeader } from './parse_link_header'
-import GotosocialAPI from './gotosocial/api_client'
-import Streaming from './gotosocial/web_socket'
-import { MegalodonInterface, NotImplementedError } from './megalodon'
-import Response from './response'
-import Entity from './entity'
-import { NO_REDIRECT, DEFAULT_SCOPE, DEFAULT_UA } from './default'
-import OAuth from './oauth'
-import * as GotosocialOAuth from './gotosocial/oauth'
-import { UnknownNotificationTypeError } from './notification'
+import { parseLinkHeader } from './parse_link_header.js'
+import GotosocialAPI from './gotosocial/api_client.js'
+import Streaming from './gotosocial/web_socket.js'
+import { MegalodonInterface, NotImplementedError } from './megalodon.js'
+import Response from './response.js'
+import Entity from './entity.js'
+import { NO_REDIRECT, DEFAULT_SCOPE, DEFAULT_UA } from './default.js'
+import OAuth from './oauth.js'
+import * as GotosocialOAuth from './gotosocial/oauth.js'
+import { UnknownNotificationTypeError } from './notification.js'
 
 export default class Gotosocial implements MegalodonInterface {
   public client: GotosocialAPI.Interface
@@ -357,6 +357,7 @@ export default class Gotosocial implements MegalodonInterface {
    * @param options.exclude_replies Return statuses which exclude replies.
    * @param options.exclude_reblogs Return statuses which exclude reblogs.
    * @param options.only_media Show only statuses with media attached? Defaults to false.
+   * @param options.only_public Return statuses with public visibility only.
    * @return Account's statuses.
    */
   public async getAccountStatuses(
@@ -370,6 +371,7 @@ export default class Gotosocial implements MegalodonInterface {
       exclude_replies?: boolean
       exclude_reblogs?: boolean
       only_media: boolean
+      only_public?: boolean
     }
   ): Promise<Response<Array<Entity.Status>>> {
     let params = {}
@@ -412,6 +414,11 @@ export default class Gotosocial implements MegalodonInterface {
       if (options.only_media) {
         params = Object.assign(params, {
           only_media: options.only_media
+        })
+      }
+      if (options.only_public) {
+        params = Object.assign(params, {
+          only_public: options.only_public
         })
       }
     }
@@ -563,6 +570,9 @@ export default class Gotosocial implements MegalodonInterface {
         converted = Object.assign({}, converted, {
           data: [...converted.data, ...nextRes.data.map(a => GotosocialAPI.Converter.account(a))]
         })
+        if (nextRes.headers.link === undefined) {
+          break
+        }
         parsed = parseLinkHeader(nextRes.headers.link)
         if (sleep_ms) {
           await new Promise<void>(converted => setTimeout(converted, sleep_ms))
@@ -683,6 +693,27 @@ export default class Gotosocial implements MegalodonInterface {
     return new Promise((_, reject) => {
       const err = new NotImplementedError('Gotosocial does not support this method')
       reject(err)
+    })
+  }
+
+  /**
+   * POST /api/v1/accounts/:id/note
+   *
+   * @param id
+   * @param note
+   * @return Relationship
+   */
+  public async setAccountNote(id: string, note?: string): Promise<Response<Entity.Relationship>> {
+    let params = {}
+    if (note) {
+      params = Object.assign(params, {
+        comment: note
+      })
+    }
+    return this.client.post<GotosocialAPI.Entity.Relationship>(`/api/v1/accounts/${id}/note`, params).then(res => {
+      return Object.assign(res, {
+        data: GotosocialAPI.Converter.relationship(res.data)
+      })
     })
   }
 
@@ -1374,7 +1405,7 @@ export default class Gotosocial implements MegalodonInterface {
       }
       if (options.visibility) {
         params = Object.assign(params, {
-          visibility: options.visibility
+          visibility: GotosocialAPI.Converter.encodeVisibility(options.visibility)
         })
       }
       if (options.scheduled_at && dayjs(options.scheduled_at).diff(dayjs(), 'seconds') > 300) {
@@ -2404,10 +2435,7 @@ export default class Gotosocial implements MegalodonInterface {
     })
   }
 
-  public readNotifications(_options: {
-    id?: string
-    max_id?: string
-  }): Promise<Response<Entity.Notification | Array<Entity.Notification>>> {
+  public readNotifications(_options: { id?: string; max_id?: string }): Promise<Response<{}>> {
     return new Promise((_, reject) => {
       const err = new NotImplementedError('Gotosocial does not support this method')
       reject(err)

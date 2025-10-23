@@ -1,15 +1,18 @@
-import Response from './response'
-import OAuth from './oauth'
-import { isCancel, RequestCanceledError } from './cancel'
-import generator, { MegalodonInterface, WebSocketInterface } from './megalodon'
-import { detector } from './detector'
-import Mastodon from './mastodon'
-import Pleroma from './pleroma'
-import Misskey from './misskey'
-import Entity from './entity'
-import NotificationType from './notification'
-import FilterContext from './filter_context'
-import Converter from './converter'
+import Response from './response.js'
+import OAuth from './oauth.js'
+import { isCancel, RequestCanceledError } from './cancel.js'
+import generator, { MegalodonInterface, WebSocketInterface } from './megalodon.js'
+import { detector } from './detector.js'
+import Mastodon from './mastodon.js'
+import Pleroma from './pleroma.js'
+import Pixelfed from './pixelfed.js'
+import Firefish from './firefish.js'
+import Misskey from './misskey.js'
+import Gotosocial from './gotosocial.js'
+import Entity from './entity.js'
+import Converter from './converter.js'
+import NotificationType from './notification.js'
+import FilterContext from './filter_context.js'
 
 export {
   Response,
@@ -23,6 +26,9 @@ export {
   FilterContext,
   Mastodon,
   Pleroma,
+  Pixelfed,
+  Firefish,
+  Gotosocial,
   Misskey,
   Entity,
   Converter

@@ -1,4 +1,4 @@
-import { detector } from '../../src/index'
+import { detector } from '../../src/index.js'
 
 describe('detector', () => {
   describe('mastodon', () => {
@@ -49,19 +49,27 @@ describe('detector', () => {
     })
   })
 
-  describe('iceshrimp', () => {
-    const url = 'https://snug.moe'
-    it('should be firefish', async () => {
-      const firefish = await detector(url)
-      expect(firefish).toEqual('firefish')
-    })
-  })
-
   describe('gotosocial', () => {
     const url = 'https://scg.owu.one'
     it('should be gotosocial', async () => {
       const gotosocial = await detector(url)
       expect(gotosocial).toEqual('gotosocial')
+    })
+  })
+
+  describe('kmy.blue', () => {
+    const url = 'https://kmy.blue'
+    it('should be mastodon', async () => {
+      const kmyblue = await detector(url)
+      expect(kmyblue).toEqual('mastodon')
+    })
+  })
+
+  describe('pixelfed.social', () => {
+    const url = 'https://pixelfed.social'
+    it('should be pixelfed', async () => {
+      const pixelfed = await detector(url)
+      expect(pixelfed).toEqual('pixelfed')
     })
   })
 

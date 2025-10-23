@@ -1,14 +1,14 @@
 import axios, { AxiosResponse, AxiosRequestConfig } from 'axios'
 import objectAssignDeep from 'object-assign-deep'
 
-import Streaming from './web_socket'
-import Response from '../response'
-import { RequestCanceledError } from '../cancel'
-import { NO_REDIRECT, DEFAULT_SCOPE, DEFAULT_UA } from '../default'
-import MastodonEntity from './entity'
-import MegalodonEntity from '../entity'
-import NotificationType, { UnknownNotificationTypeError } from '../notification'
-import MastodonNotificationType from './notification'
+import Streaming from './web_socket.js'
+import Response from '../response.js'
+import { RequestCanceledError } from '../cancel.js'
+import { NO_REDIRECT, DEFAULT_SCOPE, DEFAULT_UA } from '../default.js'
+import MastodonEntity from './entity.js'
+import MegalodonEntity from '../entity.js'
+import NotificationType, { UnknownNotificationTypeError } from '../notification.js'
+import MastodonNotificationType from './notification.js'
 
 namespace MastodonAPI {
   /**
@@ -368,7 +368,7 @@ namespace MastodonAPI {
      * Get connection and receive websocket connection for Pleroma API.
      *
      * @param url Streaming url.
-     * @param stream Stream name, please refer: https://git.pleroma.social/pleroma/pleroma/blob/develop/lib/pleroma/web/mastodon_api/mastodon_socket.ex#L19-28
+     * @param stream Stream name
      * @returns WebSocket, which inherits from EventEmitter
      */
     public socket(url: string, stream?: string, params?: string): Streaming {
@@ -415,6 +415,7 @@ namespace MastodonAPI {
     export type Source = MastodonEntity.Source
     export type Stats = MastodonEntity.Stats
     export type Status = MastodonEntity.Status
+    export type StatusVisibility = MastodonEntity.StatusVisibility
     export type StatusParams = MastodonEntity.StatusParams
     export type StatusSource = MastodonEntity.StatusSource
     export type Tag = MastodonEntity.Tag
@@ -478,6 +479,34 @@ namespace MastodonAPI {
           return NotificationType.AdminReport
         default:
           return new UnknownNotificationTypeError()
+      }
+    }
+
+    export const visibility = (v: MastodonAPI.Entity.StatusVisibility): MegalodonEntity.StatusVisibility => {
+      switch (v) {
+        case 'public':
+          return 'public'
+        case 'unlisted':
+          return 'unlisted'
+        case 'private':
+          return 'private'
+        case 'direct':
+          return 'direct'
+      }
+    }
+
+    export const encodeVisibility = (v: MegalodonEntity.StatusVisibility): MastodonAPI.Entity.StatusVisibility => {
+      switch (v) {
+        case 'public':
+          return 'public'
+        case 'unlisted':
+          return 'unlisted'
+        case 'private':
+          return 'private'
+        case 'direct':
+          return 'direct'
+        case 'local':
+          return 'public'
       }
     }
 
@@ -579,7 +608,7 @@ namespace MastodonAPI {
       muted: s.muted,
       sensitive: s.sensitive,
       spoiler_text: s.spoiler_text,
-      visibility: s.visibility,
+      visibility: visibility(s.visibility),
       media_attachments: Array.isArray(s.media_attachments) ? s.media_attachments.map(m => attachment(m)) : [],
       mentions: Array.isArray(s.mentions) ? s.mentions.map(m => mention(m)) : [],
       tags: s.tags,

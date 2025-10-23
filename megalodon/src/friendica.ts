@@ -1,16 +1,16 @@
 import { OAuth2Client } from '@badgateway/oauth2-client'
 import FormData from 'form-data'
-import { parseLinkHeader } from './parse_link_header'
+import { parseLinkHeader } from './parse_link_header.js'
 
-import FriendicaAPI from './friendica/api_client'
-import WebSocket from './friendica/web_socket'
-import { MegalodonInterface, NotImplementedError } from './megalodon'
-import Response from './response'
-import Entity from './entity'
-import { NO_REDIRECT, DEFAULT_SCOPE, DEFAULT_UA } from './default'
-import OAuth from './oauth'
-import * as FriendicaOAuth from './friendica/oauth'
-import { UnknownNotificationTypeError } from './notification'
+import FriendicaAPI from './friendica/api_client.js'
+import WebSocket from './friendica/web_socket.js'
+import { MegalodonInterface, NotImplementedError } from './megalodon.js'
+import Response from './response.js'
+import Entity from './entity.js'
+import { NO_REDIRECT, DEFAULT_SCOPE, DEFAULT_UA } from './default.js'
+import OAuth from './oauth.js'
+import * as FriendicaOAuth from './friendica/oauth.js'
+import { UnknownNotificationTypeError } from './notification.js'
 
 export default class Friendica implements MegalodonInterface {
   public client: FriendicaAPI.Interface
@@ -487,6 +487,9 @@ export default class Friendica implements MegalodonInterface {
         converted = Object.assign({}, converted, {
           data: [...converted.data, ...nextRes.data.map(a => FriendicaAPI.Converter.account(a))]
         })
+        if (nextRes.headers.link === undefined) {
+          break
+        }
         parsed = parseLinkHeader(nextRes.headers.link)
         if (sleep_ms) {
           await new Promise<void>(converted => setTimeout(converted, sleep_ms))
@@ -642,6 +645,13 @@ export default class Friendica implements MegalodonInterface {
    * @return Relationship
    */
   public async unpinAccount(_id: string): Promise<Response<Entity.Relationship>> {
+    return new Promise((_, reject) => {
+      const err = new NotImplementedError('Friendica does not support this method')
+      reject(err)
+    })
+  }
+
+  public async setAccountNote(_id: string): Promise<Response<Entity.Relationship>> {
     return new Promise((_, reject) => {
       const err = new NotImplementedError('Friendica does not support this method')
       reject(err)
@@ -2459,10 +2469,7 @@ export default class Friendica implements MegalodonInterface {
     return this.client.post<Record<string, unknown>>(`/api/v1/notifications/${id}/dismiss`)
   }
 
-  public readNotifications(_options: {
-    id?: string
-    max_id?: string
-  }): Promise<Response<Entity.Notification | Array<Entity.Notification>>> {
+  public readNotifications(_options: { id?: string; max_id?: string }): Promise<Response<{}>> {
     return new Promise((_, reject) => {
       const err = new NotImplementedError('Friendica does not support this method')
       reject(err)

@@ -2,16 +2,16 @@
 import { OAuth2Client } from '@badgateway/oauth2-client'
 import FormData from 'form-data'
 
-import PleromaAPI from './pleroma/api_client'
-import WebSocket from './pleroma/web_socket'
-import { MegalodonInterface, NotImplementedError, ArgumentError } from './megalodon'
-import Response from './response'
-import Entity from './entity'
+import PleromaAPI from './pleroma/api_client.js'
+import WebSocket from './pleroma/web_socket.js'
+import { MegalodonInterface, NotImplementedError, ArgumentError } from './megalodon.js'
+import Response from './response.js'
+import Entity from './entity.js'
 
-import { NO_REDIRECT, DEFAULT_SCOPE, DEFAULT_UA } from './default'
-import OAuth from './oauth'
-import * as PleromaOAuth from './pleroma/oauth'
-import { UnknownNotificationTypeError } from './notification'
+import { NO_REDIRECT, DEFAULT_SCOPE, DEFAULT_UA } from './default.js'
+import OAuth from './oauth.js'
+import * as PleromaOAuth from './pleroma/oauth.js'
+import { UnknownNotificationTypeError } from './notification.js'
 
 export default class Pleroma implements MegalodonInterface {
   public client: PleromaAPI.Interface
@@ -461,13 +461,16 @@ export default class Pleroma implements MegalodonInterface {
   }
 
   /**
-   * POST /api/v1/pleroma/accounts/:id/subscribe
+   * POST /api/v1/accounts/:id/follow
    *
    * @param id Target account ID.
    * @return Relationship.
    */
   public async subscribeAccount(id: string): Promise<Response<Entity.Relationship>> {
-    return this.client.post<PleromaAPI.Entity.Relationship>(`/api/v1/pleroma/accounts/${id}/subscribe`).then(res => {
+    const params = {
+      notify: true
+    }
+    return this.client.post<PleromaAPI.Entity.Relationship>(`/api/v1/accounts/${id}/follow`, params).then(res => {
       return Object.assign(res, {
         data: PleromaAPI.Converter.relationship(res.data)
       })
@@ -475,13 +478,16 @@ export default class Pleroma implements MegalodonInterface {
   }
 
   /**
-   * POST /api/v1/pleroma/accounts/:id/unsubscribe
+   * POST /api/v1/accounts/:id/follow
    *
    * @param id Target account ID.
    * @return Relationship.
    */
   public async unsubscribeAccount(id: string): Promise<Response<Entity.Relationship>> {
-    return this.client.post<PleromaAPI.Entity.Relationship>(`/api/v1/pleroma/accounts/${id}/unsubscribe`).then(res => {
+    const params = {
+      notify: false
+    }
+    return this.client.post<PleromaAPI.Entity.Relationship>(`/api/v1/accounts/${id}/follow`, params).then(res => {
       return Object.assign(res, {
         data: PleromaAPI.Converter.relationship(res.data)
       })
@@ -723,6 +729,13 @@ export default class Pleroma implements MegalodonInterface {
       return Object.assign(res, {
         data: PleromaAPI.Converter.relationship(res.data)
       })
+    })
+  }
+
+  public async setAccountNote(_id: string): Promise<Response<Entity.Relationship>> {
+    return new Promise((_, reject) => {
+      const err = new NotImplementedError('Pleroma does not support this method')
+      reject(err)
     })
   }
 
@@ -1570,7 +1583,7 @@ export default class Pleroma implements MegalodonInterface {
       }
       if (options.visibility) {
         params = Object.assign(params, {
-          visibility: options.visibility
+          visibility: PleromaAPI.Converter.encodeVisibility(options.visibility)
         })
       }
       if (options.scheduled_at) {
@@ -2775,29 +2788,17 @@ export default class Pleroma implements MegalodonInterface {
    * @param max_id Read all notifications up to this ID
    * @return Array of notifications
    */
-  public async readNotifications(options: {
-    id?: string
-    max_id?: string
-  }): Promise<Response<Entity.Notification | Array<Entity.Notification>>> {
+  public async readNotifications(options: { id?: string; max_id?: string }): Promise<Response<{}>> {
     if (options.id) {
-      const res = await this.client.post<PleromaAPI.Entity.Notification>('/api/v1/pleroma/notifications/read', {
+      const res = await this.client.post<{}>('/api/v1/pleroma/notifications/read', {
         id: options.id
       })
-      const notify = PleromaAPI.Converter.notification(res.data)
-      if (notify instanceof UnknownNotificationTypeError) return { ...res, data: [] }
-      return { ...res, data: notify }
+      return res
     } else if (options.max_id) {
-      const res = await this.client.post<Array<PleromaAPI.Entity.Notification>>('/api/v1/pleroma/notifications/read', {
+      const res = await this.client.post<{}>('/api/v1/pleroma/notifications/read', {
         max_id: options.max_id
       })
-      return {
-        ...res,
-        data: res.data.flatMap(n => {
-          const notify = PleromaAPI.Converter.notification(n)
-          if (notify instanceof UnknownNotificationTypeError) return []
-          return notify
-        })
-      }
+      return res
     } else {
       return new Promise((_, reject) => {
         const err = new ArgumentError('id or max_id is required')
