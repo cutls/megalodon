@@ -90,7 +90,6 @@ export default class WebSocket extends EventEmitter implements WebSocketInterfac
     this._resetConnection()
     this._resetRetryParams()
   }
-  
   public subscribe(_name: string, _stream: string, _add?: Record<string, string>) {}
 
   /**
@@ -238,6 +237,10 @@ export default class WebSocket extends EventEmitter implements WebSocketInterfac
         this._bindSocket(this._client)
       }
     }, this._reconnectInterval)
+  }
+
+  public reconnect(): void {
+    this._reconnect()
   }
 
   /**

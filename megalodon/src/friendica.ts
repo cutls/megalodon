@@ -34,7 +34,7 @@ export default class Friendica implements MegalodonInterface {
     this.baseUrl = baseUrl
   }
 
-  public cancel(): void {
+  public cancel() {
     return this.client.cancel()
   }
 

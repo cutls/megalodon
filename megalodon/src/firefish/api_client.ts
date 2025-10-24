@@ -701,7 +701,7 @@ namespace FirefishAPI {
      * Cancel all requests in this instance.
      * @returns void
      */
-    public cancel(): void {
+    public cancel() {
       return this.abortController.abort()
     }
 

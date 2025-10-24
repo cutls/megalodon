@@ -139,6 +139,10 @@ export default class WebSocket extends EventEmitter implements WebSocketInterfac
     }, this._reconnectInterval)
   }
 
+  public reconnect() {
+    this._reconnect()
+  }
+
   /**
    * @param url Base url of streaming endpoint.
    * @param stream The specified stream name.

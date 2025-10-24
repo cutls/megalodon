@@ -1,9 +1,7 @@
-/// <reference path="user.ts" />
+import { User } from "./user.js"
 
-namespace MisskeyEntity {
   export type FollowRequest = {
     id: string
     follower: User
     followee: User
   }
-}

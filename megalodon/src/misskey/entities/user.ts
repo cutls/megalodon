@@ -1,6 +1,5 @@
-/// <reference path="emoji.ts" />
+import { Emoji, EmojiKeyValue } from "./emoji.js"
 
-namespace MisskeyEntity {
   export type User = {
     id: string
     name: string
@@ -10,4 +9,3 @@ namespace MisskeyEntity {
     avatarColor: string
     emojis: Array<Emoji> | EmojiKeyValue
   }
-}

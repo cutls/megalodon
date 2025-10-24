@@ -25,6 +25,7 @@ export default class Streaming extends EventEmitter implements WebSocketInterfac
   private _pongReceivedTimestamp: Dayjs
   private _heartbeatInterval = 60000
   private _pongWaiting = false
+  private _channelSubscriptions: Record<string, string>[] = []
 
   /**
    * @param url Full url of websocket: e.g. https://mastodon.social/api/v1/streaming
@@ -87,6 +88,11 @@ export default class Streaming extends EventEmitter implements WebSocketInterfac
    */
   public subscribe(name: string, _stream: string, add?: Record<string, string>) {
     this._client?.send(JSON.stringify({ type: 'subscribe', stream: name, ...add }))
+    this._channelSubscriptions.push({
+      type: 'subscribe',
+      stream: name,
+      ...add
+    })
   }
 
   /**
@@ -97,6 +103,7 @@ export default class Streaming extends EventEmitter implements WebSocketInterfac
       this._client.close(1000)
       this._clearBinding()
       this._client = null
+      this._channelSubscriptions = []
     }
 
     if (this.parser) {
@@ -137,9 +144,17 @@ export default class Streaming extends EventEmitter implements WebSocketInterfac
         // Call connect methods
         console.log('Reconnecting')
         this._client = this._connect(this.url, this.stream, this.params, this._accessToken, this.headers)
+        // Resubscribe channels
+        for (const ch of this._channelSubscriptions) {
+          this._client.send(JSON.stringify(ch))
+        }
         this._bindSocket(this._client)
       }
     }, this._reconnectInterval)
+  }
+
+  public reconnect() {
+    this._reconnect()
   }
 
   /**
@@ -149,7 +164,13 @@ export default class Streaming extends EventEmitter implements WebSocketInterfac
    * @param headers The specified headers.
    * @return A WebSocket instance.
    */
-  private _connect(url: string, stream: string | undefined, params: string | null, accessToken: string, headers: { [key: string]: string }): WS {
+  private _connect(
+    url: string,
+    stream: string | undefined,
+    params: string | null,
+    accessToken: string,
+    headers: { [key: string]: string }
+  ): WS {
     const parameter: Array<string> = stream ? [`stream=${stream}`] : []
 
     if (params) {

@@ -1,9 +1,8 @@
-/// <reference path="user.ts" />
-/// <reference path="emoji.ts" />
-/// <reference path="file.ts" />
-/// <reference path="poll.ts" />
+import { Poll } from "./poll.js"
+import { User } from "./user.js"
+import { Emoji, EmojiKeyValue } from "./emoji.js"
+import { File } from "./file.js"
 
-namespace MisskeyEntity {
   export type Note = {
     id: string
     createdAt: string
@@ -30,4 +29,3 @@ namespace MisskeyEntity {
     myReaction?: string,
     reactionEmojis?: EmojiKeyValue
   }
-}

@@ -2,17 +2,18 @@ import axios, { AxiosResponse, AxiosRequestConfig } from 'axios'
 import dayjs from 'dayjs'
 import FormData from 'form-data'
 
-import { DEFAULT_UA } from '../default'
-import Response from '../response'
-import MisskeyEntity from './entity'
-import MegalodonEntity from '../entity'
-import WebSocket from './web_socket'
-import MisskeyNotificationType from './notification'
-import NotificationType from '../notification'
-import { isBrowser } from '../default'
+import { DEFAULT_UA } from '../default.js'
+import Response from '../response.js'
+import MisskeyEntity from './entity.js'
+import MegalodonEntity from '../entity.js'
+import WebSocket from './web_socket.js'
+import MisskeyNotificationType from './notification.js'
+import NotificationType from '../notification.js'
+import { isBrowser } from '../default.js'
 import Autolinker from 'autolinker'
 export const isEmojiArr = (item: any): item is MisskeyEntity.Emoji[] => Array.isArray(item)
 function autoLinker(input: string, host: string) {
+  // @ts-ignore
   return Autolinker.link(input, {
     hashtag: 'twitter',
     mention: 'twitter',
@@ -633,7 +634,7 @@ namespace MisskeyAPI {
      * Cancel all requests in this instance.
      * @returns void
      */
-    public cancel(): void {
+    public cancel() {
       return this.abortController.abort()
     }
 

@@ -1,8 +1,8 @@
 import WS from 'isomorphic-ws'
 import { EventEmitter } from 'events'
-import { WebSocketInterface } from '../megalodon'
-import MisskeyAPI from './api_client'
-import { isBrowser } from '../default'
+import { WebSocketInterface } from '../megalodon.js'
+import MisskeyAPI from './api_client.js'
+import { isBrowser } from '../default.js'
 type MisskeyTL = 'user' | 'localTimeline' | 'hybridTimeline' | 'globalTimeline' | 'conversation' | 'list'
 /**
  * WebSocket
@@ -29,13 +29,7 @@ export default class WebSocket extends EventEmitter implements WebSocketInterfac
    * @param accessToken The access token.
    * @param listId This parameter is required when you specify list as channel.
    */
-  constructor(
-    url: string,
-    channel: MisskeyTL,
-    accessToken: string,
-    listId: string | undefined,
-    userAgent: string
-  ) {
+  constructor(url: string, channel: MisskeyTL, accessToken: string, listId: string | undefined, userAgent: string) {
     super()
     this.url = url
     this.parser = new Parser()
@@ -87,8 +81,6 @@ export default class WebSocket extends EventEmitter implements WebSocketInterfac
     this._resetConnection()
     this._resetRetryParams()
   }
-
-
   /**
    * Subscribe stream.
    */
@@ -235,6 +227,10 @@ export default class WebSocket extends EventEmitter implements WebSocketInterfac
         this._bindSocket(this._client)
       }
     }, this._reconnectInterval)
+  }
+
+  public reconnect() {
+    this._reconnect()
   }
 
   /**

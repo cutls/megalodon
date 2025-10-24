@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/ban-types */
 import FormData from 'form-data'
-import MisskeyAPI from './misskey/api_client'
-import { DEFAULT_UA } from './default'
-import MisskeyOAuth from './misskey_oauth'
-import Response from './response'
-import Entity from './entity'
-import { MegalodonInterface, WebSocketInterface, NotImplementedError, ArgumentError, UnexpectedError } from './megalodon'
+import MisskeyAPI from './misskey/api_client.js'
+import { DEFAULT_UA } from './default.js'
+import MisskeyOAuth from './misskey_oauth.js'
+import Response from './response.js'
+import Entity from './entity.js'
+import { MegalodonInterface, WebSocketInterface, NotImplementedError, ArgumentError, UnexpectedError } from './megalodon.js'
 
 export default class Misskey implements MegalodonInterface {
   public client: MisskeyAPI.Interface
@@ -150,7 +150,7 @@ export default class Misskey implements MegalodonInterface {
         appSecret: client_secret,
         token: session_token
       })
-      .then(res => {
+      .then((res: any) => {
         const token = new MisskeyOAuth.TokenData(res.data.accessToken, 'misskey', '', 0, null, null)
         return token
       })

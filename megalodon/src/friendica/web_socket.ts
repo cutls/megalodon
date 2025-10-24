@@ -5,6 +5,7 @@ export default class WebSocket extends EventEmitter implements WebSocketInterfac
   constructor(_url: string, _stream: string, _params: string | undefined, _accessToken: string, _userAgent: string) {
     super()
   }
+  public reconnect() {}
   public start() {}
   public stop() {}
   public subscribe(_name: string, _stream: string, _add?: Record<string, string>) {}

@@ -9,6 +9,9 @@ export default class Streaming extends EventEmitter implements WebSocketInterfac
   constructor() {
     super()
   }
+  public subscribe(_name: string, _stream: string, _add?: Record<string, string>): void {
+    throw new Error('Method not implemented.')
+  }
 
   /**
    * Start websocket connection.

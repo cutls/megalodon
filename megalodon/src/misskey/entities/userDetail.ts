@@ -1,7 +1,6 @@
-/// <reference path="emoji.ts" />
-/// <reference path="note.ts" />
+import { Emoji } from "./emoji.js"
+import { Note } from "./note.js"
 
-namespace MisskeyEntity {
   export type UserDetail = {
     id: string
     name: string
@@ -29,4 +28,3 @@ namespace MisskeyEntity {
     pinnedNoteIds?: Array<string>
     pinnedNotes?: Array<Note>
   }
-}

@@ -1,7 +1,6 @@
-/// <reference path="user.ts" />
-/// <reference path="note.ts" />
+import { User } from "./user.js"
+import { Note } from "./note.js"
 
-namespace MisskeyEntity {
   export type Notification = {
     id: string
     createdAt: string
@@ -14,4 +13,3 @@ namespace MisskeyEntity {
   }
 
   export type NotificationType = string
-}

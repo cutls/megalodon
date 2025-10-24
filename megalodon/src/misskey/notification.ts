@@ -1,4 +1,4 @@
-import MisskeyEntity from './entity'
+import MisskeyEntity from './entity.js'
 
 namespace MisskeyNotificationType {
   export const Follow: MisskeyEntity.NotificationType = 'follow'
