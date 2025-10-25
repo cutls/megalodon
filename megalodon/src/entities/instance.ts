@@ -1,6 +1,7 @@
-import { Account } from './account.js'
-import { URLs } from './urls.js'
-import { Stats } from './stats.js'
+import type { Account } from './account.js'
+import type { URLs } from './urls.js'
+import type { Stats } from './stats.js'
+import type { Instance as MastodonInstance } from '../mastodon/entities/instance.js'
 
 export type Instance = {
   uri: string
@@ -30,9 +31,12 @@ export type Instance = {
   }
   contact_account?: Account
   rules?: Array<InstanceRule>
+  rawData?: MastodonInstance
 }
 
 export type InstanceRule = {
   id: string
   text: string
+  hint?: string
+  translations?: Record<string, { text: string; hint: string }>
 }

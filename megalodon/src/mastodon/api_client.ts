@@ -549,7 +549,35 @@ namespace MastodonAPI {
     export const filter = (f: Entity.Filter): MegalodonEntity.Filter => f
     export const history = (h: Entity.History): MegalodonEntity.History => h
     export const identity_proof = (i: Entity.IdentityProof): MegalodonEntity.IdentityProof => i
-    export const instance = (i: Entity.Instance): MegalodonEntity.Instance => i
+    export const instance = (i: Entity.Instance): MegalodonEntity.Instance => ({
+      uri: i.domain,
+      title: i.title,
+      description: i.description,
+      email: i.contact.email,
+      version: i.version,
+      thumbnail: i.thumbnail.url,
+      urls: { streaming_api: i.configuration.urls.streaming },
+      stats: { user_count: 0, status_count: 0, domain_count: 0 },
+      languages: i.languages,
+      registrations: i.registrations.enabled,
+      approval_required: i.registrations.approval_required,
+      invites_enabled: false,
+      configuration: {
+        statuses: {
+          max_characters: i.configuration.statuses.max_characters,
+          max_media_attachments: i.configuration.statuses.max_media_attachments,
+          characters_reserved_per_url: i.configuration.statuses.characters_reserved_per_url
+        },
+        polls: {
+          max_options: i.configuration.polls.max_options,
+          max_characters_per_option: i.configuration.polls.max_characters_per_option,
+          min_expiration: i.configuration.polls.min_expiration,
+          max_expiration: i.configuration.polls.max_expiration
+        }
+      },
+      contact_account: i.contact.account || undefined,
+      rules: i.rules
+    })
     export const list = (l: Entity.List): MegalodonEntity.List => l
     export const marker = (m: Entity.Marker | Record<never, never>): MegalodonEntity.Marker | Record<never, never> => m
     export const mention = (m: Entity.Mention): MegalodonEntity.Mention => m

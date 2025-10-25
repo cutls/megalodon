@@ -1,15 +1,12 @@
-# Megalodon
-
-[![Test](https://github.com/h3poteto/megalodon/workflows/Test/badge.svg)](https://github.com/h3poteto/megalodon/actions?query=branch%3Amaster+workflow%3ATest)
-[![NPM Version](https://img.shields.io/npm/v/megalodon.svg)](https://www.npmjs.com/package/megalodon)
-[![GitHub release](https://img.shields.io/github/release/h3poteto/megalodon.svg)](https://github.com/h3poteto/megalodon/releases)
-[![npm](https://img.shields.io/npm/dm/megalodon)](https://www.npmjs.com/package/megalodon)
-[![NPM](https://img.shields.io/npm/l/megalodon)](/LICENSE.txt)
+# Megalodon (Forked)
 
 Megalodon is a Fediverse API client library for [NodeJS](https://nodejs.org) and browsers.
 This library allows for interfacing with [Mastodon](https://joinmastodon.org), [Pleroma](https://pleroma.social), [Friendica](https://friendi.ca), and [Firefish](https://joinfirefish.org) servers all with the same interface, providing REST API and streaming methods.
 
-The Rust version is [megalodon-rs](https://github.com/h3poteto/megalodon-rs).
+## Difference from original
+
+- Misskey partial support
+- One streaming with subscription
 
 ## Supports
 
@@ -23,6 +20,7 @@ The Rust version is [megalodon-rs](https://github.com/h3poteto/megalodon-rs).
 - [x] Sharkey (Unofficial)
 - [x] Hometown (Unofficial)
 - [x] Iceshrimp (Unofficial)
+- [x] Misskey (Unofficial)
 
 ## Features
 
@@ -32,6 +30,12 @@ The Rust version is [megalodon-rs](https://github.com/h3poteto/megalodon-rs).
 - [x] Promisified methods
 - [x] NodeJS and browser support
 - [x] Written in TypeScript
+
+## Important changelog
+
+### v6.2.2
+
+For Mastodon only, we use `/api/v2/instance` instead of `/api/v1/instance` and convert the data to the same schema as `v1`. Therefore, `short_description` is undefined and each item in `stats` is always reported as 0. Note that `rawData` contains the contents of `/api/v2/instance` as is.
 
 ## Install
 
@@ -208,3 +212,4 @@ console.log(second_server) // firefish
 ## License
 
 The software is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT).
+

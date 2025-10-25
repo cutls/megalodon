@@ -2987,10 +2987,10 @@ export default class Mastodon implements MegalodonInterface {
   // instance
   // ======================================
   /**
-   * GET /api/v1/instance
+   * GET /api/v2/instance
    */
   public async getInstance(): Promise<Response<Entity.Instance>> {
-    return this.client.get<MastodonAPI.Entity.Instance>('/api/v1/instance').then(res => {
+    return this.client.get<MastodonAPI.Entity.Instance>('/api/v2/instance').then(res => {
       return Object.assign(res, {
         data: MastodonAPI.Converter.instance(res.data)
       })
