@@ -90,6 +90,14 @@ export default class WebSocket extends EventEmitter implements WebSocketInterfac
   }
 
   /**
+   * Unsubscribe stream.
+   */
+
+  public unsubscribe(channelID: string, stream: string) {
+    this._client?.send(JSON.stringify({ type: 'disconnect', body: { channel: stream, id: channelID } }))
+  }
+
+  /**
    * Clean up current connection, and listeners.
    */
   private _resetConnection() {

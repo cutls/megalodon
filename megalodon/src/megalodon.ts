@@ -18,6 +18,7 @@ export interface WebSocketInterface {
   removeListener(event: string | symbol, listener: (...args: any[]) => void): this
   removeAllListeners(event?: string | symbol): this
   subscribe(name: string, stream: string, add?: Record<string, string>): void
+  unsubscribe(name: string, stream: string): void
   reconnect(): void
 }
 

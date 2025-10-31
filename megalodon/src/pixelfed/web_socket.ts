@@ -13,7 +13,10 @@ export default class Streaming extends EventEmitter implements WebSocketInterfac
     throw new Error('Method not implemented.')
   }
   public subscribe(_name: string, _stream: string, _add?: Record<string, string>): void {
-    throw new Error('Method not implemented.')
+    //throw new Error('Method not implemented.')
+  }
+  public unsubscribe(_name: string, _stream: string): void {
+    //throw new Error('Method not implemented.')
   }
 
   /**

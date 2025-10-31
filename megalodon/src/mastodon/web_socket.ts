@@ -16,6 +16,7 @@ export default class Streaming extends EventEmitter implements WebSocketInterfac
   public params: string | null
   public parser: Parser
   public headers: { [key: string]: string }
+  public channelSubscriptions: Record<string, string>[] = []
   private _accessToken: string
   private _reconnectInterval: number
   private _reconnectMaxAttempts: number
@@ -25,7 +26,6 @@ export default class Streaming extends EventEmitter implements WebSocketInterfac
   private _pongReceivedTimestamp: Dayjs
   private _heartbeatInterval = 60000
   private _pongWaiting = false
-  private _channelSubscriptions: Record<string, string>[] = []
 
   /**
    * @param url Full url of websocket: e.g. https://mastodon.social/api/v1/streaming
@@ -88,11 +88,19 @@ export default class Streaming extends EventEmitter implements WebSocketInterfac
    */
   public subscribe(name: string, _stream: string, add?: Record<string, string>) {
     this._client?.send(JSON.stringify({ type: 'subscribe', stream: name, ...add }))
-    this._channelSubscriptions.push({
+    this.channelSubscriptions.push({
       type: 'subscribe',
       stream: name,
       ...add
     })
+  }
+
+  /**
+   * Unsubscribe stream.
+   */
+  public unsubscribe(name: string, _stream: string) {
+    this._client?.send(JSON.stringify({ type: 'unsubscribe', stream: name }))
+    this.channelSubscriptions = this.channelSubscriptions.filter(ch => !(ch.type === 'subscribe' && ch.stream === name))
   }
 
   /**
@@ -103,7 +111,7 @@ export default class Streaming extends EventEmitter implements WebSocketInterfac
       this._client.close(1000)
       this._clearBinding()
       this._client = null
-      this._channelSubscriptions = []
+      this.channelSubscriptions = []
     }
 
     if (this.parser) {
@@ -145,7 +153,7 @@ export default class Streaming extends EventEmitter implements WebSocketInterfac
         console.log('Reconnecting')
         this._client = this._connect(this.url, this.stream, this.params, this._accessToken, this.headers)
         // Resubscribe channels
-        for (const ch of this._channelSubscriptions) {
+        for (const ch of this.channelSubscriptions) {
           this._client.send(JSON.stringify(ch))
         }
         this._bindSocket(this._client)
