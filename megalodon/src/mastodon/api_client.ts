@@ -365,17 +365,14 @@ namespace MastodonAPI {
     }
 
     /**
-     * Get connection and receive websocket connection for Pleroma API.
+     * Get connection and receive websocket connection for Mastodon API.
      *
      * @param url Streaming url.
      * @param stream Stream name
      * @returns WebSocket, which inherits from EventEmitter
      */
     public socket(url: string, stream?: string, params?: string): Streaming {
-      if (!this.accessToken) {
-        throw new Error('accessToken is required')
-      }
-      const streaming = new Streaming(url, stream, params, this.accessToken, this.userAgent)
+      const streaming = new Streaming(url, stream, params, this.accessToken || '', this.userAgent)
 
       streaming.start()
       return streaming

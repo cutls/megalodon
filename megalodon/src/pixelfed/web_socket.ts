@@ -9,13 +9,14 @@ export default class Streaming extends EventEmitter implements WebSocketInterfac
   constructor() {
     super()
   }
+  public channelSubscriptions: Record<string, string>[] = []
   public reconnect(): void {
     throw new Error('Method not implemented.')
   }
   public subscribe(_name: string, _stream: string, _add?: Record<string, string>): void {
     //throw new Error('Method not implemented.')
   }
-  public unsubscribe(_name: string, _stream: string): void {
+  public unsubscribe(_stream: string): void {
     //throw new Error('Method not implemented.')
   }
 

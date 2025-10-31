@@ -98,9 +98,9 @@ export default class Streaming extends EventEmitter implements WebSocketInterfac
   /**
    * Unsubscribe stream.
    */
-  public unsubscribe(name: string, _stream: string) {
-    this._client?.send(JSON.stringify({ type: 'unsubscribe', stream: name }))
-    this.channelSubscriptions = this.channelSubscriptions.filter(ch => !(ch.type === 'subscribe' && ch.stream === name))
+  public unsubscribe(stream: string) {
+    this._client?.send(JSON.stringify({ type: 'unsubscribe', stream }))
+    this.channelSubscriptions = this.channelSubscriptions.filter(ch => !(ch.type === 'subscribe' && ch.stream === stream))
   }
 
   /**

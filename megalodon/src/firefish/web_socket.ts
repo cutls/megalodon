@@ -18,6 +18,7 @@ export default class WebSocket extends EventEmitter implements WebSocketInterfac
   public parser: Parser
   public headers: { [key: string]: string }
   public listId: string | null = null
+  public channelSubscriptions: Record<string, string>[] = []
   private _accessToken: string
   private _reconnectInterval: number
   private _reconnectMaxAttempts: number
@@ -91,7 +92,7 @@ export default class WebSocket extends EventEmitter implements WebSocketInterfac
     this._resetRetryParams()
   }
   public subscribe(_name: string, _stream: string, _add?: Record<string, string>) {}
-  public unsubscribe(_name: string, _stream: string, _add?: Record<string, string>) {}
+  public unsubscribe(_stream: string) {}
 
   /**
    * Clean up current connection, and listeners.

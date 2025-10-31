@@ -15,6 +15,7 @@ export default class WebSocket extends EventEmitter implements WebSocketInterfac
   public parser: Parser
   public headers: { [key: string]: string }
   public listId: string | null = null
+  public channelSubscriptions: Record<string, string>[] = []
   private _accessToken: string
   private _reconnectInterval: number
   private _reconnectMaxAttempts: number
@@ -87,14 +88,21 @@ export default class WebSocket extends EventEmitter implements WebSocketInterfac
 
   public subscribe(channelID: string, stream: string, add?: Record<string, string>) {
     this._client?.send(JSON.stringify({ type: 'connect', body: { channel: stream, id: channelID, params: add } }))
+    this.channelSubscriptions.push({
+      type: 'subscribe',
+      stream: channelID,
+      channel: stream,
+      ...add
+    })
   }
 
   /**
    * Unsubscribe stream.
    */
 
-  public unsubscribe(channelID: string, stream: string) {
-    this._client?.send(JSON.stringify({ type: 'disconnect', body: { channel: stream, id: channelID } }))
+  public unsubscribe(channelID: string) {
+    this._client?.send(JSON.stringify({ type: 'disconnect', body: { id: channelID } }))
+    this.channelSubscriptions = this.channelSubscriptions.filter(ch => !(ch.type === 'subscribe' && ch.stream === channelID))
   }
 
   /**
@@ -105,6 +113,7 @@ export default class WebSocket extends EventEmitter implements WebSocketInterfac
       this._client.close(1000)
       this._clearBinding()
       this._client = null
+      this.channelSubscriptions = []
     }
 
     if (this.parser) {
@@ -232,6 +241,14 @@ export default class WebSocket extends EventEmitter implements WebSocketInterfac
         // Call connect methods
         console.log('Reconnecting')
         this._client = this._connect()
+        // Resubscribe channels
+        for (const ch of this.channelSubscriptions) {
+          const add = { ...ch }
+          delete add.type
+          delete add.stream
+          delete add.channel
+          this._client?.send(JSON.stringify({ type: 'connect', body: { channel: ch.channel, id: ch.stream, params: add } }))
+        }
         this._bindSocket(this._client)
       }
     }, this._reconnectInterval)

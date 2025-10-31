@@ -815,10 +815,7 @@ namespace PleromaAPI {
      * @returns WebSocket, which inherits from EventEmitter
      */
     public socket(url: string, stream: string, params?: string): WebSocket {
-      if (!this.accessToken) {
-        throw new Error('accessToken is required')
-      }
-      const streaming = new WebSocket(url, stream, params, this.accessToken, this.userAgent)
+      const streaming = new WebSocket(url, stream, params, this.accessToken || '', this.userAgent)
 
       streaming.start()
 

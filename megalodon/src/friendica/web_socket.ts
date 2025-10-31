@@ -9,5 +9,6 @@ export default class WebSocket extends EventEmitter implements WebSocketInterfac
   public start() {}
   public stop() {}
   public subscribe(_name: string, _stream: string, _add?: Record<string, string>) {}
-  public unsubscribe(_name: string, _stream: string) {}
+  public unsubscribe(_stream: string) {}
+  public channelSubscriptions: Record<string, string>[] = []
 }
