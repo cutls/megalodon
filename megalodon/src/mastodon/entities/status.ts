@@ -39,6 +39,16 @@ export type Status = {
   // These parameters are unique parameters in fedibird.com for quote.
   quote_id?: string
   quote?: Status | null
+  emoji_reactioned?: boolean
+  emoji_reactions?: Array<Reaction>
+  emoji_reactions_count?: number
+}
+
+export type Reaction = {
+  name: string
+  count: number
+  account_ids: Array<string>
+  me: boolean
 }
 
 export type StatusTag = {

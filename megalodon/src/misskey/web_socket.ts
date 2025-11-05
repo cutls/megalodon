@@ -241,14 +241,6 @@ export default class WebSocket extends EventEmitter implements WebSocketInterfac
         // Call connect methods
         console.log('Reconnecting')
         this._client = this._connect()
-        // Resubscribe channels
-        for (const ch of this.channelSubscriptions) {
-          const add = { ...ch }
-          delete add.type
-          delete add.stream
-          delete add.channel
-          this._client?.send(JSON.stringify({ type: 'connect', body: { channel: ch.channel, id: ch.stream, params: add } }))
-        }
         this._bindSocket(this._client)
       }
     }, this._reconnectInterval)
@@ -287,13 +279,28 @@ export default class WebSocket extends EventEmitter implements WebSocketInterfac
       }
     }
     client.onopen = _event => {
-      this.emit('connect', {})
+      const chsRaw = structuredClone(this.channelSubscriptions)
+      const chs = [...new Set(chsRaw.map(e => JSON.stringify(e)))].map(e => JSON.parse(e))
+      this.channelSubscriptions = []
+      if (!chs.length) this.emit('connect', {})
       this._channel()
       if (!isBrowser()) {
         // Call first ping event.
         setTimeout(() => {
           client.ping('')
         }, 10000)
+      }
+      // Resubscribe channels
+      for (const ch of this.channelSubscriptions) {
+        const add = { ...ch }
+        delete add.type
+        delete add.stream
+        delete add.channel
+        this._client?.send(JSON.stringify({ type: 'connect', body: { channel: ch.channel, id: ch.stream, params: add } }))
+        this.channelSubscriptions.push(ch)
+      }
+      if (chs.length) {
+        this.emit('connect', {})
       }
     }
     client.onmessage = event => {

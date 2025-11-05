@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/ban-types */
 import FormData from 'form-data'
 import MisskeyAPI from './misskey/api_client.js'
 import { DEFAULT_UA } from './default.js'
@@ -2158,12 +2157,13 @@ export default class Misskey implements MegalodonInterface {
    * POST /api/notes/reactions/create
    *
    * @param {string} id Target note ID.
-   * @param {string} emoji Reaction emoji string. This string is raw unicode emoji.
+   * @param {string} emoji Reaction emoji string. This string is raw unicode emoji or custom emoji without `:` format.
    */
   public async createEmojiReaction(id: string, emoji: string): Promise<Response<Entity.Status>> {
+    const isCustomEmoji = !!emoji.match(/^[a-zA-Z0-9_@]+$/)
     await this.client.post<{}>('/api/notes/reactions/create', {
       noteId: id,
-      reaction: emoji
+      reaction: isCustomEmoji ? `:${emoji}:` : emoji
     })
     return this.client
       .post<MisskeyAPI.Entity.Note>('/api/notes/show', {

@@ -151,11 +151,9 @@ export default class Streaming extends EventEmitter implements WebSocketInterfac
         }
         // Call connect methods
         console.log('Reconnecting')
-        this._client = this._connect(this.url, this.stream, this.params, this._accessToken, this.headers)
-        // Resubscribe channels
-        for (const ch of this.channelSubscriptions) {
-          this._client.send(JSON.stringify(ch))
-        }
+        const client = this._connect(this.url, this.stream, this.params, this._accessToken, this.headers)
+        this._client = client
+
         this._bindSocket(this._client)
       }
     }, this._reconnectInterval)
@@ -236,12 +234,23 @@ export default class Streaming extends EventEmitter implements WebSocketInterfac
       }
     }
     client.onopen = _event => {
-      this.emit('connect', {})
+      const chsRaw = structuredClone(this.channelSubscriptions)
+      const chs = [...new Set(chsRaw.map(e => JSON.stringify(e)))].map(e => JSON.parse(e))
+      this.channelSubscriptions = []
+      if (!chs.length) this.emit('connect', {})
       if (!isBrowser()) {
         // Call first ping event.
         setTimeout(() => {
           client.ping('')
         }, 10000)
+      }
+      // Resubscribe channels
+      for (const ch of chs) {
+        client.send(JSON.stringify(ch))
+        this.channelSubscriptions.push(ch)
+      }
+      if (chs.length) {
+        this.emit('connect', {})
       }
     }
     client.onmessage = event => {

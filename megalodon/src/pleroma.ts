@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/ban-types */
 import { OAuth2Client } from '@badgateway/oauth2-client'
 import FormData from 'form-data'
 
@@ -35,7 +34,7 @@ export default class Pleroma implements MegalodonInterface {
     this.baseUrl = baseUrl
   }
 
-  public cancel(): void {
+  public cancel() {
     return this.client.cancel()
   }
 
@@ -3245,7 +3244,7 @@ export default class Pleroma implements MegalodonInterface {
     const url = await this.streamingURL()
     return this.client.socket(`${url}/api/v1/streaming`, 'direct')
   }
-  
+
   // ======================================
   // WebSocket Subscription Fallback
   // ======================================

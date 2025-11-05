@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/ban-types */
 import { OAuth2Client } from '@badgateway/oauth2-client'
 import FormData from 'form-data'
 import dayjs from 'dayjs'
@@ -3147,19 +3146,21 @@ export default class Mastodon implements MegalodonInterface {
   }
 
   // ======================================
-  // Emoji reactions
+  // Emoji reactions(Fedibird style)
   // ======================================
-  public async createEmojiReaction(_id: string, _emoji: string): Promise<Response<Entity.Status>> {
-    return new Promise((_, reject) => {
-      const err = new NotImplementedError('Mastodon does not support this method')
-      reject(err)
+  public async createEmojiReaction(id: string, emoji: string): Promise<Response<Entity.Status>> {
+    return this.client.put<MastodonAPI.Entity.Status>(`/api/v1/statuses/${id}/emoji_reactions/${encodeURI(emoji)}`).then(res => {
+      return Object.assign(res, {
+        data: MastodonAPI.Converter.status(res.data)
+      })
     })
   }
 
-  public async deleteEmojiReaction(_id: string, _emoji: string): Promise<Response<Entity.Status>> {
-    return new Promise((_, reject) => {
-      const err = new NotImplementedError('Mastodon does not support this method')
-      reject(err)
+  public async deleteEmojiReaction(id: string, emoji: string): Promise<Response<Entity.Status>> {
+    return this.client.del<MastodonAPI.Entity.Status>(`/api/v1/statuses/${id}/emoji_reactions/${encodeURI(emoji)}`).then(res => {
+      return Object.assign(res, {
+        data: MastodonAPI.Converter.status(res.data)
+      })
     })
   }
 
