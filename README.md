@@ -8,6 +8,10 @@ This library allows for interfacing with [Mastodon](https://joinmastodon.org), [
 - Misskey partial support
 - One streaming with subscription
 
+### Misskey support
+
+The goal is for this library to work with the Misskey.io server at the time of release. Other servers may not be supported due to version differences. In principle, we do not consider backward compatibility for Misskey support.
+
 ## Supports
 
 - [x] Mastodon <img src="https://cdn.simpleicons.org/mastodon" alt="Mastodon" width=16 height=16>

@@ -10,16 +10,16 @@ import WebSocket from './web_socket.js'
 import MisskeyNotificationType from './notification.js'
 import NotificationType from '../notification.js'
 import { isBrowser } from '../default.js'
-import Autolinker from 'autolinker'
+import AutolinkerImported from 'autolinker'
 export const isEmojiArr = (item: any): item is MisskeyEntity.Emoji[] => Array.isArray(item)
 function autoLinker(input: string, host: string) {
-  // @ts-ignore
+  const Autolinker = AutolinkerImported as any
   return Autolinker.link(input, {
     hashtag: 'twitter',
     mention: 'twitter',
     email: false,
     stripPrefix: false,
-    replaceFn: function (match) {
+    replaceFn: (match: any) => {
       switch (match.type) {
         case 'url':
           return true
@@ -94,6 +94,7 @@ namespace MisskeyAPI {
         acct = `${u.username}@${u.host}`
         acctUrl = `https://${u.host}/@${u.username}`
       }
+      const localEmojis = emojiExtractor(u.name || '', host).map(e => emoji(e))
       return {
         id: u.id,
         username: u.username,
@@ -110,7 +111,7 @@ namespace MisskeyAPI {
         avatar_static: u.avatarUrl,
         header: u.avatarUrl,
         header_static: u.avatarUrl,
-        emojis: emojiConverter(u.emojis).map(e => emoji(e)),
+        emojis: [...emojiConverter(u.emojis).map(e => emoji(e)), ...localEmojis],
         moved: null,
         fields: [],
         bot: false,
@@ -130,6 +131,7 @@ namespace MisskeyAPI {
         acct = `${u.username}@${u.host}`
         acctUrl = `https://${u.host}/@${u.username}`
       }
+      const localEmojis = emojiExtractor(`${u.name}${u.description}`, host).map(e => emoji(e))
       return {
         id: u.id,
         username: u.username,
@@ -146,7 +148,7 @@ namespace MisskeyAPI {
         avatar_static: u.avatarUrl || 'https://http.cat/404',
         header: u.bannerUrl || u.avatarUrl || 'https://http.cat/404',
         header_static: u.bannerUrl || u.avatarUrl || 'https://http.cat/404',
-        emojis: emojiConverter(u.emojis).map(e => emoji(e)),
+        emojis: [...emojiConverter(u.emojis).map(e => emoji(e)), ...localEmojis],
         moved: null,
         fields: [],
         bot: u.isBot || false,
@@ -278,6 +280,7 @@ namespace MisskeyAPI {
             .replace(/\r?\n/g, '<br>')
         : ''
       const html = autoLinker(text, host)
+      const localEmojis = emojiExtractor(text, host).map(e => emoji(e))
       return {
         id: n.id,
         uri: n.uri ? n.uri : `https://${host}/notes/${n.id}`,
@@ -290,7 +293,7 @@ namespace MisskeyAPI {
         plain_content: n.text ? n.text : null,
         created_at: n.createdAt,
         edited_at: null,
-        emojis: emojiConverter(n.emojis).map(e => emoji(e)),
+        emojis: [...emojiConverter(n.emojis).map(e => emoji(e)), ...localEmojis],
         replies_count: n.repliesCount,
         reblogs_count: n.renoteCount,
         favourites_count: 0,
@@ -388,6 +391,21 @@ namespace MisskeyAPI {
         }
       }
       return result
+    }
+
+    export const emojiExtractor = (text: string, host: string): MisskeyEntity.Emoji[] => {
+      const r = text.match(/:([a-zA-Z0-9_+-]+):/g)
+      if (!r) return []
+      const unique = Array.from(new Set(r))
+      return unique.map(u => {
+        const shortcode = u.replace(/:/g, '')
+        return {
+          name: shortcode,
+          host: null,
+          url: `https://${host}/emoji/${shortcode}.webp`,
+          aliases: []
+        }
+      })
     }
 
     export const noteToConversation = (n: Entity.Note, host: string): MegalodonEntity.Conversation => {

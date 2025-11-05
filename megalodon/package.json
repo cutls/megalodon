@@ -1,6 +1,6 @@
 {
   "name": "@cutls/megalodon",
-  "version": "6.3.4",
+  "version": "6.3.8",
   "description": "Fediverse API client for node.js and browser",
   "type": "module",
   "main": "./lib/cjs/index.js",

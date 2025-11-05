@@ -61,7 +61,9 @@ export default class WebSocket extends EventEmitter implements WebSocketInterfac
   }
 
   private baseUrlToHost(baseUrl: string): string {
-    return baseUrl.replace('https://', '').replace('wss://', '')
+    const m = baseUrl.match(/(https|wss):\/\/([^/]+)/)
+    if (!m) return ''
+    return m[2] || ''
   }
 
   /**
