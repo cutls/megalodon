@@ -404,6 +404,7 @@ namespace MastodonAPI {
     export type PollOption = MastodonEntity.PollOption
     export type Preferences = MastodonEntity.Preferences
     export type PushSubscription = MastodonEntity.PushSubscription
+    export type Reaction = MastodonEntity.Reaction
     export type Relationship = MastodonEntity.Relationship
     export type Report = MastodonEntity.Report
     export type Results = MastodonEntity.Results
@@ -642,16 +643,17 @@ namespace MastodonAPI {
       application: s.application ? application(s.application) : null,
       language: s.language,
       pinned: s.pinned,
-      emoji_reactions: [],
       bookmarked: s.bookmarked ? s.bookmarked : false,
       // Now quote is supported only fedibird.com.
-      quote: s.quote !== undefined && s.quote !== null
+      quote: s.quote !== undefined && s.quote !== null,
+      emoji_reactions: reaction(s.emoji_reactions || [])
     })
     export const status_params = (s: Entity.StatusParams): MegalodonEntity.StatusParams => s
     export const status_source = (s: Entity.StatusSource): MegalodonEntity.StatusSource => s
     export const tag = (t: Entity.Tag): MegalodonEntity.Tag => t
     export const token = (t: Entity.Token): MegalodonEntity.Token => t
     export const urls = (u: Entity.URLs): MegalodonEntity.URLs => u
+    export const reaction = (r: Array<Entity.Reaction>): Array<MegalodonEntity.Reaction> => r
   }
 }
 export default MastodonAPI

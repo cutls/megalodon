@@ -62,6 +62,7 @@ export namespace Entity {
   export type PollOption = poll.PollOption
   export type Preferences = preferences.Preferences
   export type PushSubscription = push_subscription.PushSubscription
+  export type Reaction = status.Reaction
   export type Relationship = relationship.Relationship
   export type Report = report.Report
   export type Results = results.Results
