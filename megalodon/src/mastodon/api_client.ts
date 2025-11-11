@@ -624,7 +624,7 @@ namespace MastodonAPI {
       account: account(s.account),
       in_reply_to_id: s.in_reply_to_id,
       in_reply_to_account_id: s.in_reply_to_account_id,
-      reblog: s.reblog ? status(s.reblog) : s.quote ? status(s.quote) : null,
+      reblog: s.reblog ? status(s.reblog) : s.quote?.quoted_status ? status(s.quote.quoted_status) : null,
       content: s.content,
       plain_content: null,
       created_at: s.created_at,
@@ -649,7 +649,7 @@ namespace MastodonAPI {
       pinned: s.pinned,
       bookmarked: s.bookmarked ? s.bookmarked : false,
       quote: s.quote !== undefined && s.quote !== null,
-      quote_status: s.quote ? status(s.quote) : null,
+      quote_status: s.quote?.quoted_status ? status(s.quote?.quoted_status) : null,
       quotes_count: s.quotes_count,
       quote_approval: s.quote_approval?.current_user,
       // Now emoji_reaction is supported only fedibird.com.
