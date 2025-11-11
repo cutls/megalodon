@@ -11,6 +11,22 @@ import Converter from './converter.js'
 import NotificationType from './notification.js'
 import FilterContext from './filter_context.js'
 
-export { Response, OAuth, RequestCanceledError, isCancel, detector, getData, MegalodonInterface, WebSocketInterface, NotificationType, FilterContext, Mastodon, Pleroma, Misskey, Entity, Converter }
+export {
+  Response,
+  OAuth,
+  RequestCanceledError,
+  isCancel,
+  detector,
+  getData,
+  MegalodonInterface,
+  WebSocketInterface,
+  NotificationType,
+  FilterContext,
+  Mastodon,
+  Pleroma,
+  Misskey,
+  Entity,
+  Converter
+}
 
 export default generator

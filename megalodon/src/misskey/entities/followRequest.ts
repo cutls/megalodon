@@ -1,7 +1,7 @@
-import type { User } from './user.js'
+import { User } from "./user.js"
 
-export type FollowRequest = {
-	id: string
-	follower: User
-	followee: User
-}
+  export type FollowRequest = {
+    id: string
+    follower: User
+    followee: User
+  }

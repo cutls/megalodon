@@ -1,16 +1,16 @@
-import type { Emoji } from './emoji.js'
+import { Emoji } from "./emoji.js";
 
 export type Meta = {
-	maintainerName: string
-	maintainerEmail: string
-	name: string
-	version: string
-	uri: string
-	description: string
-	langs: Array<string>
-	disableRegistration: boolean
-	disableLocalTimeline: boolean
-	bannerUrl: string
-	maxNoteTextLength: 300
-	emojis: Array<Emoji>
-}
+	maintainerName: string;
+	maintainerEmail: string;
+	name: string;
+	version: string;
+	uri: string;
+	description: string;
+	langs: Array<string>;
+	disableRegistration: boolean;
+	disableLocalTimeline: boolean;
+	bannerUrl: string;
+	maxNoteTextLength: 300;
+	emojis: Array<Emoji>;
+};

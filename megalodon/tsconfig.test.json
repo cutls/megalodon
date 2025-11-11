@@ -1,7 +1,7 @@
 {
-	"extends": "./tsconfig.esm.json",
-	"compilerOptions": {
-		"types": ["node", "jest"]
-	},
-	"include": ["./test", "../src"]
+  "extends": "./tsconfig.esm.json",
+  "compilerOptions": {
+    "types": ["node", "jest"]
+  },
+  "include": ["./test", "../src"]
 }

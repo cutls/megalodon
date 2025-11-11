@@ -3,9 +3,9 @@ export const DEFAULT_SCOPE = ['read', 'write', 'follow']
 export const DEFAULT_UA = 'megalodon'
 
 export function isBrowser() {
-	if (typeof window !== 'undefined') {
-		return true
-	} else {
-		return false
-	}
+  if (typeof window !== 'undefined') {
+    return true
+  } else {
+    return false
+  }
 }
