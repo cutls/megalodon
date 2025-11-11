@@ -1613,6 +1613,11 @@ export default class Mastodon implements MegalodonInterface {
           visibility: MastodonAPI.Converter.encodeVisibility(options.visibility)
         })
       }
+      if (options.quote_approval_policy) {
+        params = Object.assign(params, {
+          quote_approval_policy: options.quote_approval_policy
+        })
+      }
       if (options.scheduled_at && dayjs(options.scheduled_at).diff(dayjs(), 'seconds') > 300) {
         scheduled = true
         params = Object.assign(params, {
@@ -1673,6 +1678,7 @@ export default class Mastodon implements MegalodonInterface {
       sensitive?: boolean
       media_ids?: Array<string>
       poll?: { options?: Array<string>; expires_in?: number; multiple?: boolean; hide_totals?: boolean }
+      quote_approval_policy?: string
     }
   ): Promise<Response<Entity.Status>> {
     let params = {}
@@ -1694,6 +1700,11 @@ export default class Mastodon implements MegalodonInterface {
     if (options.media_ids) {
       params = Object.assign(params, {
         media_ids: options.media_ids
+      })
+    }
+    if (options.quote_approval_policy) {
+      params = Object.assign(params, {
+        quote_approval_policy: options.quote_approval_policy
       })
     }
     if (options.poll) {
@@ -1737,6 +1748,20 @@ export default class Mastodon implements MegalodonInterface {
    */
   public async deleteStatus(id: string): Promise<Response<Entity.Status>> {
     return this.client.del<MastodonAPI.Entity.Status>(`/api/v1/statuses/${id}`).then(res => {
+      return Object.assign(res, {
+        data: MastodonAPI.Converter.status(res.data)
+      })
+    })
+  }
+
+  /**
+   * POST /api/v1/statuses/:id/quotes/:quoting_status_id/revoke
+   *
+   * @param id The target status id.
+   * @return Status
+   */
+  public async revokeQuote(yourId: string, quotingId: string): Promise<Response<Entity.Status>> {
+    return this.client.post<MastodonAPI.Entity.Status>(`/api/v1/statuses/${yourId}/quotes/${quotingId}/revoke`).then(res => {
       return Object.assign(res, {
         data: MastodonAPI.Converter.status(res.data)
       })

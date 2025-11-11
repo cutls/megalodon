@@ -1,6 +1,6 @@
 {
   "name": "@cutls/megalodon",
-  "version": "7.0.4",
+  "version": "7.0.13",
   "description": "Mastodon, Pleroma, Misskey API client for node.js and browser",
   "type": "module",
   "main": "./lib/cjs/index.js",

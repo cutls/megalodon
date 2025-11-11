@@ -6,4 +6,5 @@ export type Source = {
   language: string | null
   note: string
   fields: Array<Field>
+  quote_policy?: 'public' | 'followers' | 'nobody'
 }

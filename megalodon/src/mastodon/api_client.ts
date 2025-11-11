@@ -475,6 +475,10 @@ namespace MastodonAPI {
           return NotificationType.PollExpired
         case MastodonNotificationType.Update:
           return NotificationType.Update
+        case MastodonNotificationType.Quote:
+          return NotificationType.Quote
+        case MastodonNotificationType.QuotedUpdate:
+          return NotificationType.QuotedUpdate
         case MastodonNotificationType.AdminSignup:
           return NotificationType.AdminSignup
         case MastodonNotificationType.AdminReport:
@@ -651,7 +655,7 @@ namespace MastodonAPI {
       quote: s.quote !== undefined && s.quote !== null,
       quote_status: s.quote?.quoted_status ? status(s.quote?.quoted_status) : null,
       quotes_count: s.quotes_count,
-      quote_approval: s.quote_approval?.current_user,
+      quote_approval: s.quote_approval,
       // Now emoji_reaction is supported only fedibird.com.
       emoji_reactions: reaction(s.emoji_reactions || [])
     })

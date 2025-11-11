@@ -1713,6 +1713,13 @@ export default class Pleroma implements MegalodonInterface {
     })
   }
 
+  public async revokeQuote(_yourId: string, _quotingId: string): Promise<Response<Entity.Status>> {
+    return new Promise((_, reject) => {
+      const err = new NotImplementedError('pleroma does not support')
+      reject(err)
+    })
+  }
+
   /**
    * GET /api/v1/statuses/:id/context
    *

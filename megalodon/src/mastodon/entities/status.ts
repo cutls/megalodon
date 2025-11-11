@@ -40,7 +40,7 @@ export type Status = {
   quotes_count?: number
   quote?: {
     quoted_status: Status | null
-    state: 'accepted' | 'pending' | 'rejected'
+    state: 'accepted' | 'pending' | 'revoked'
   }
   quote_approval?: QuoteApproval
   // These parameters are unique parameters in fedibird.com for quote.

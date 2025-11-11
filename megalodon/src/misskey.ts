@@ -1134,6 +1134,13 @@ export default class Misskey implements MegalodonInterface {
     })
   }
 
+  public async revokeQuote(_yourId: string, _quotingId: string): Promise<Response<Entity.Status>> {
+    return new Promise((_, reject) => {
+      const err = new NotImplementedError('misskey does not support')
+      reject(err)
+    })
+  }
+
   /**
    * POST /api/notes/delete
    */

@@ -694,7 +694,8 @@ export interface MegalodonInterface {
       visibility?: Entity.StatusVisibility
       scheduled_at?: string
       language?: string
-      quote_id?: string
+      quoted_status_id?: string
+      quote_approval_policy?: string
     }
   ): Promise<Response<Entity.Status | Entity.ScheduledStatus>>
   /**
@@ -723,6 +724,7 @@ export interface MegalodonInterface {
       sensitive?: boolean
       media_ids?: Array<string>
       poll?: { options?: Array<string>; expires_in?: number; multiple?: boolean; hide_totals?: boolean }
+      quote_approval_policy?: string
     }
   ): Promise<Response<Entity.Status>>
   /**
@@ -732,6 +734,14 @@ export interface MegalodonInterface {
    * @return Status
    */
   deleteStatus(id: string): Promise<Response<{}>>
+  /**
+   * Revoke quote authorization of status quoting_status_id, detaching status id.
+   *
+   * @param yourId The ID of the quoted Status in the database.
+   * @param quotingId The ID of the quoting Status in the database.
+   * @return Status
+   */
+  revokeQuote(yourId: string, quotingId: string): Promise<Response<Entity.Status>>
   /**
    * Get parent and child statuses in context.
    * View statuses above and below this status in the thread.

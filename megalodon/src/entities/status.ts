@@ -40,7 +40,7 @@ export type Status = {
   emoji_reactions: Array<Reaction>
   quote: boolean
   quotes_count?: number
-  quote_approval?: 'automatic' | 'manual' | 'denied' | 'unknown'
+  quote_approval?: QuoteApproval
   quote_status?: Status | null
   bookmarked: boolean
 }
@@ -51,3 +51,10 @@ export type StatusTag = {
 }
 
 export type StatusVisibility = 'public' | 'unlisted' | 'private' | 'direct' | 'local'
+
+type QuoteApprovalPolicy = 'public' | 'followers' | 'following' | 'unsupported_policy'
+export type QuoteApproval = {
+  automatic: QuoteApprovalPolicy[]
+  manual: QuoteApprovalPolicy[]
+  current_user: 'automatic' | 'manual' | 'denied' | 'unknown'
+}
