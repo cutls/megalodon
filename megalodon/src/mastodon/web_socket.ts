@@ -59,9 +59,13 @@ export default class Streaming extends EventEmitter implements WebSocketInterfac
    * Start websocket connection.
    */
   public start() {
-    this._connectionClosed = false
-    this._resetRetryParams()
-    this._startWebSocketConnection()
+    try {
+      this._connectionClosed = false
+      this._resetRetryParams()
+      this._startWebSocketConnection()
+    } catch (err) {
+      console.error(err)
+    }
   }
 
   /**
@@ -70,8 +74,9 @@ export default class Streaming extends EventEmitter implements WebSocketInterfac
   private _startWebSocketConnection() {
     this._resetConnection()
     this._setupParser()
-    this._client = this._connect(this.url, this.stream, this.params, this._accessToken, this.headers)
-    this._bindSocket(this._client)
+    const client = this._connect(this.url, this.stream, this.params, this._accessToken, this.headers)
+    this._client = client
+    if (client) this._bindSocket(client)
   }
 
   /**
@@ -153,8 +158,7 @@ export default class Streaming extends EventEmitter implements WebSocketInterfac
         console.log('Reconnecting')
         const client = this._connect(this.url, this.stream, this.params, this._accessToken, this.headers)
         this._client = client
-
-        this._bindSocket(this._client)
+        if (client) this._bindSocket(client)
       }
     }, this._reconnectInterval)
   }
@@ -176,7 +180,7 @@ export default class Streaming extends EventEmitter implements WebSocketInterfac
     params: string | null,
     accessToken: string,
     headers: { [key: string]: string }
-  ): WS {
+  ): WS | null {
     const parameter: Array<string> = stream ? [`stream=${stream}`] : []
 
     if (params) {
@@ -191,15 +195,22 @@ export default class Streaming extends EventEmitter implements WebSocketInterfac
     if (isBrowser()) {
       // This is browser.
       // We can't pass options when browser: https://github.com/heineiuo/isomorphic-ws#limitations
-      const cli = new WS(requestURL)
-      return cli
+      try {
+        const cli = new WS(requestURL)
+        return cli
+      } catch {
+        return null
+      }
     } else {
       const options: WS.ClientOptions = {
         headers: headers
       }
-
-      const cli: WS = new WS(requestURL, options)
-      return cli
+      try {
+        const cli: WS = new WS(requestURL, options)
+        return cli
+      } catch {
+        return null
+      }
     }
   }
 

@@ -1,7 +1,7 @@
 # Megalodon (Forked)
 
 Megalodon is a Fediverse API client library for [NodeJS](https://nodejs.org) and browsers.
-This library allows for interfacing with [Mastodon](https://joinmastodon.org), [Pleroma](https://pleroma.social), [Friendica](https://friendi.ca), and [Firefish](https://joinfirefish.org) servers all with the same interface, providing REST API and streaming methods.
+This library allows for interfacing with [Mastodon](https://joinmastodon.org), [Pleroma](https://pleroma.social), and [Misskey](https://misskey-hub.net) servers all with the same interface, providing REST API and streaming methods.
 
 ## Difference from original
 
@@ -16,15 +16,8 @@ The goal is for this library to work with the Misskey.io server at the time of r
 
 - [x] Mastodon <img src="https://cdn.simpleicons.org/mastodon" alt="Mastodon" width=16 height=16>
 - [x] Pleroma <img src="https://cdn.simpleicons.org/pleroma" alt="Pleroma" width=16 height=16>
-- [x] Friendica
-- [x] Firefish <img src="https://cdn.simpleicons.org/firefish" alt="Firefish" width=16 height=16>
-- [x] Gotosocial
-- [x] Pixelfed
-- [x] Akkoma (Unofficial)
-- [x] Sharkey (Unofficial)
-- [x] Hometown (Unofficial)
-- [x] Iceshrimp (Unofficial)
-- [x] Misskey (Unofficial)
+- [x] Misskey
+
 
 ## Features
 
@@ -40,6 +33,13 @@ The goal is for this library to work with the Misskey.io server at the time of r
 ### v6.2.2
 
 For Mastodon only, we use `/api/v2/instance` instead of `/api/v1/instance` and convert the data to the same schema as `v1`. Therefore, `short_description` is undefined and each item in `stats` is always reported as 0. Note that `rawData` contains the contents of `/api/v2/instance` as is.
+
+### v7.0.0
+
+For Mastodon 4.5.0...
+
+* Deleted `options.quote_id` on `postStatus({ status, options })`, use `options.quote_status_id`
+* Deleted `Entity.Status.quote_status_misskey`, use `Entity.Status.quote_status`
 
 ## Install
 
@@ -197,20 +197,20 @@ client.fetchAccessToken(clientId, clientSecret, code)
 
 ### Detect each server's software
 
-You have to provide the server's software name (e.g. `mastodon`, `pleroma`, `firefish`) to the `generator` function.
+You have to provide the server's software name (e.g. `mastodon`, `pleroma`, `misskey`) to the `generator` function.
 But when you only know the URL and not the software the server runs on, the `detector` function can detect the server's software.
 
 ```ts
 import { detector } from 'megalodon'
 
 const FIRST_URL = 'https://mastodon.social'
-const SECOND_URL = 'https://firefish.social'
+const SECOND_URL = 'https://misskey.io'
 
 const first_server = await detector(MASTODON_URL)
-const second_server = await detector(FIREFISH_URL)
+const second_server = await detector(MISSKEY_URL)
 
 console.log(first_server) // mastodon
-console.log(second_server) // firefish
+console.log(second_server) // misskey
 ```
 
 ## License

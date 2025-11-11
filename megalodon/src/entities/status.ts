@@ -39,7 +39,9 @@ export type Status = {
   pinned: boolean | null
   emoji_reactions: Array<Reaction>
   quote: boolean
-  quote_status_misskey?: Status | null
+  quotes_count?: number
+  quote_approval?: 'automatic' | 'manual' | 'denied' | 'unknown'
+  quote_status?: Status | null
   bookmarked: boolean
 }
 

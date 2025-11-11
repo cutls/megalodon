@@ -5,10 +5,7 @@ import generator, { MegalodonInterface, WebSocketInterface } from './megalodon.j
 import { detector } from './detector.js'
 import Mastodon from './mastodon.js'
 import Pleroma from './pleroma.js'
-import Pixelfed from './pixelfed.js'
-import Firefish from './firefish.js'
 import Misskey from './misskey.js'
-import Gotosocial from './gotosocial.js'
 import Entity from './entity.js'
 import Converter from './converter.js'
 import NotificationType from './notification.js'
@@ -26,9 +23,6 @@ export {
   FilterContext,
   Mastodon,
   Pleroma,
-  Pixelfed,
-  Firefish,
-  Gotosocial,
   Misskey,
   Entity,
   Converter

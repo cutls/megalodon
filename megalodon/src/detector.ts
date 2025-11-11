@@ -41,13 +41,13 @@ type Metadata = {
 
 /**
  * Detect SNS type.
- * Now support Mastodon, Pleroma and Pixelfed. Throws an error when no known platform can be detected.
+ * Now support Mastodon, Pleroma. Throws an error when no known platform can be detected.
  *
  * @param url Base URL of SNS.
  * @param proxyConfig Proxy setting, or set false if don't use proxy.
  * @return SNS name.
  */
-export const detector = async (url: string): Promise<'mastodon' | 'pleroma' | 'friendica' | 'firefish' | 'gotosocial' | 'pixelfed' | 'misskey'> => {
+export const detector = async (url: string): Promise<'mastodon' | 'pleroma' | 'misskey'> => {
   const options: AxiosRequestConfig = {
     timeout: 20000
   }
@@ -61,24 +61,10 @@ export const detector = async (url: string): Promise<'mastodon' | 'pleroma' | 'f
       switch (res.data.software.name) {
         case 'akkoma':
           return 'pleroma'
-        case 'firefish':
-          return 'firefish'
-        case 'friendica':
-          return 'friendica'
-        case 'gotosocial':
-          return 'gotosocial'
-        case 'hometown':
-          return 'mastodon'
-        case 'iceshrimp':
-          return 'firefish'
         case 'mastodon':
           return 'mastodon'
-        case 'pixelfed':
-          return 'pixelfed'
         case 'pleroma':
           return 'pleroma'
-        case 'sharkey':
-          return 'mastodon'
         default:
           if (res.data.metadata.upstream?.name && res.data.metadata.upstream.name.toLowerCase() === 'mastodon') {
             return 'mastodon'
@@ -91,24 +77,10 @@ export const detector = async (url: string): Promise<'mastodon' | 'pleroma' | 'f
       switch (res.data.software.name) {
         case 'akkoma':
           return 'pleroma'
-        case 'firefish':
-          return 'firefish'
-        case 'friendica':
-          return 'friendica'
-        case 'gotosocial':
-          return 'gotosocial'
-        case 'hometown':
-          return 'mastodon'
-        case 'iceshrimp':
-          return 'firefish'
         case 'mastodon':
           return 'mastodon'
-        case 'pixelfed':
-          return 'pixelfed'
         case 'pleroma':
           return 'pleroma'
-        case 'sharkey':
-          return 'mastodon'
         default:
           if (res.data.metadata.upstream?.name && res.data.metadata.upstream.name.toLowerCase() === 'mastodon') {
             return 'mastodon'
@@ -121,26 +93,14 @@ export const detector = async (url: string): Promise<'mastodon' | 'pleroma' | 'f
       switch (res.data.software.name) {
         case 'akkoma':
           return 'pleroma'
-        case 'firefish':
-          return 'firefish'
-        case 'friendica':
-          return 'friendica'
-        case 'gotosocial':
-          return 'gotosocial'
         case 'misskey':
           return 'misskey'
         case 'hometown':
           return 'mastodon'
-        case 'iceshrimp':
-          return 'firefish'
         case 'mastodon':
           return 'mastodon'
-        case 'pixelfed':
-          return 'pixelfed'
         case 'pleroma':
           return 'pleroma'
-        case 'sharkey':
-          return 'mastodon'
         default:
           if (res.data.metadata.upstream?.name && res.data.metadata.upstream.name.toLowerCase() === 'mastodon') {
             return 'mastodon'

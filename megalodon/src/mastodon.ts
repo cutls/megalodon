@@ -1544,7 +1544,9 @@ export default class Mastodon implements MegalodonInterface {
    * @param options.visibility Visibility of the posted status.
    * @param options.scheduled_at ISO 8601 Datetime at which to schedule a status.
    * @param options.language ISO 639 language code for this status.
-   * @param options.quote_id ID of the status being quoted to, if status is a quote.
+   * @param options.quote_id ID of the status being quoted to, if status is a quote.(Fedibird)
+   * @param options.quoted_status_id ID of the status being quoted to, if status is a quote.(4.5.0)
+   * @param options.quote_approval_policy String, one of public, followers or nobody(4.5.0)
    * @return Status. When options.scheduled_at is present, ScheduledStatus is returned instead.
    */
   public async postStatus(
@@ -1558,7 +1560,8 @@ export default class Mastodon implements MegalodonInterface {
       visibility?: Entity.StatusVisibility
       scheduled_at?: string
       language?: string
-      quote_id?: string
+      quoted_status_id?: string
+      quote_approval_policy?: string
     }
   ): Promise<Response<Entity.Status | Entity.ScheduledStatus>> {
     let params = {
@@ -1621,9 +1624,10 @@ export default class Mastodon implements MegalodonInterface {
           language: options.language
         })
       }
-      if (options.quote_id) {
+      if (options.quoted_status_id) {
         params = Object.assign(params, {
-          quote_id: options.quote_id
+          quote_id: options.quoted_status_id,
+          quoted_status_id: options.quoted_status_id
         })
       }
     }
@@ -3224,14 +3228,19 @@ export default class Mastodon implements MegalodonInterface {
   // ======================================
 
   public async userStreamingSubscription(): Promise<Streaming> {
-    const url = await this.streamingURL()
-    return new Promise((resolve, _) => {
-      const socket = this.client.socket(`${url}/api/v1/streaming`)
-      socket.on('connect', () => {
-        socket.subscribe('user', 'user')
-        resolve(socket)
+    try {
+      const url = await this.streamingURL()
+      return new Promise((resolve, reject) => {
+        const socket = this.client.socket(`${url}/api/v1/streaming`)
+        socket.on('connect', () => {
+          socket.subscribe('user', 'user')
+          resolve(socket)
+        })
+        socket.on('error', error => reject(error))
       })
-    })
+    } catch (error) {
+      return Promise.reject(error)
+    }
   }
 
   public async publicStreamingSubscription(socket: Streaming): Promise<Streaming> {

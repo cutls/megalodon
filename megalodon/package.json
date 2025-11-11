@@ -1,7 +1,7 @@
 {
   "name": "@cutls/megalodon",
-  "version": "6.3.8",
-  "description": "Fediverse API client for node.js and browser",
+  "version": "7.0.0",
+  "description": "Mastodon, Pleroma, Misskey API client for node.js and browser",
   "type": "module",
   "main": "./lib/cjs/index.js",
   "module": "./lib/esm/index.js",

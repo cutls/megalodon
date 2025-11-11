@@ -36,12 +36,22 @@ export type Status = {
   language: string | null
   pinned: boolean | null
   bookmarked?: boolean
+  // 4.5.0
+  quotes_count?: number
+  quote?: Status | null
+  quote_approval?: QuoteApproval
   // These parameters are unique parameters in fedibird.com for quote.
   quote_id?: string
-  quote?: Status | null
   emoji_reactioned?: boolean
   emoji_reactions?: Array<Reaction>
   emoji_reactions_count?: number
+}
+
+type QuoteApprovalPolicy = 'public' | 'followers' | 'following' | 'unsupported_policy'
+export type QuoteApproval = {
+  automatic: QuoteApprovalPolicy[]
+  manual: QuoteApprovalPolicy[]
+  current_user: 'automatic' | 'manual' | 'denied' | 'unknown'
 }
 
 export type Reaction = {

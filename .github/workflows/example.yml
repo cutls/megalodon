@@ -33,14 +33,10 @@ jobs:
         env:
           MASTODON_URL: https://fedibird.com
           PLEROMA_URL: https://pleroma.io
-          FIREFISH_URL: https://cybre.club
-          FRIENDICA_URL: https://squeet.me
         run: |
           yarn workspace node-cjs run build
           node example/node-cjs/dist/mastodon/instance.js
           node example/node-cjs/dist/pleroma/instance.js
-          node example/node-cjs/dist/firefish/instance.js
-          node example/node-cjs/dist/friendica/instance.js
 
   node-esm:
     runs-on: ubuntu-latest

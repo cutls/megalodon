@@ -3,10 +3,6 @@ import OAuth from './oauth.js'
 import Pleroma from './pleroma.js'
 import Mastodon from './mastodon.js'
 import Entity from './entity.js'
-import Friendica from './friendica.js'
-import Firefish from './firefish.js'
-import Gotosocial from './gotosocial.js'
-import Pixelfed from './pixelfed.js'
 import Misskey from './misskey.js'
 
 export interface WebSocketInterface {
@@ -564,14 +560,14 @@ export interface MegalodonInterface {
   /**
    * Accept the follow request.
    *
-   * @param id Target account ID. Or follow request ID in Friendica.
+   * @param id Target account ID.
    * @return Relationship.
    */
   acceptFollowRequest(id: string): Promise<Response<Entity.Relationship>>
   /**
    * Reject the follow request.
    *
-   * @param id Target account ID. Or follow request ID in Friendica.
+   * @param id Target account ID.
    * @return Relationship.
    */
   rejectFollowRequest(id: string): Promise<Response<Entity.Relationship>>
@@ -1448,14 +1444,14 @@ export class NodeinfoError extends Error {
 /**
  * Get client for each SNS according to megalodon interface.
  *
- * @param sns Name of your SNS, `mastodon`, `pleroma`, `firefish`, `gotosocial`, or `pixelfed`.
+ * @param sns Name of your SNS, `mastodon`, `pleroma`, `misskey`.
  * @param baseUrl hostname or base URL.
  * @param accessToken access token from OAuth2 authorization
  * @param userAgent UserAgent is specified in header on request.
  * @return Client instance for each SNS you specified.
  */
 const generator = (
-  sns: 'mastodon' | 'pleroma' | 'friendica' | 'firefish' | 'gotosocial' | 'pixelfed' | 'misskey',
+  sns: 'mastodon' | 'pleroma' | 'misskey',
   baseUrl: string,
   accessToken: string | null = null,
   userAgent: string | null = null
@@ -1465,29 +1461,13 @@ const generator = (
       const pleroma = new Pleroma(baseUrl, accessToken, userAgent)
       return pleroma
     }
-    case 'friendica': {
-      const friendica = new Friendica(baseUrl, accessToken, userAgent)
-      return friendica
-    }
     case 'mastodon': {
       const mastodon = new Mastodon(baseUrl, accessToken, userAgent)
       return mastodon
     }
-    case 'firefish': {
-      const firefish = new Firefish(baseUrl, accessToken, userAgent)
-      return firefish
-    }
-    case 'gotosocial': {
-      const gotosocial = new Gotosocial(baseUrl, accessToken, userAgent)
-      return gotosocial
-    }
     case 'misskey': {
       const misskey = new Misskey(baseUrl, accessToken, userAgent)
       return misskey
-    }
-    case 'pixelfed': {
-      const pixelfed = new Pixelfed(baseUrl, accessToken, userAgent)
-      return pixelfed
     }
   }
 }

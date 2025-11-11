@@ -442,6 +442,10 @@ namespace MastodonAPI {
           return MastodonNotificationType.Poll
         case NotificationType.Update:
           return MastodonNotificationType.Update
+        case NotificationType.Quote:
+          return MastodonNotificationType.Quote
+        case NotificationType.QuotedUpdate:
+          return MastodonNotificationType.QuotedUpdate
         case NotificationType.AdminSignup:
           return MastodonNotificationType.AdminSignup
         case NotificationType.AdminReport:
@@ -644,8 +648,11 @@ namespace MastodonAPI {
       language: s.language,
       pinned: s.pinned,
       bookmarked: s.bookmarked ? s.bookmarked : false,
-      // Now quote is supported only fedibird.com.
       quote: s.quote !== undefined && s.quote !== null,
+      quote_status: s.quote ? status(s.quote) : null,
+      quotes_count: s.quotes_count,
+      quote_approval: s.quote_approval?.current_user,
+      // Now emoji_reaction is supported only fedibird.com.
       emoji_reactions: reaction(s.emoji_reactions || [])
     })
     export const status_params = (s: Entity.StatusParams): MegalodonEntity.StatusParams => s

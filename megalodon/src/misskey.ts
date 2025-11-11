@@ -565,7 +565,7 @@ export default class Misskey implements MegalodonInterface {
 
   public async setAccountNote(_id: string): Promise<Response<Entity.Relationship>> {
     return new Promise((_, reject) => {
-      const err = new NotImplementedError('Firefish does not support this method')
+      const err = new NotImplementedError('misskey does not support this method')
       reject(err)
     })
   }
@@ -577,12 +577,12 @@ export default class Misskey implements MegalodonInterface {
    */
   public async getRelationship(id: string): Promise<Response<Entity.Relationship>> {
     return this.client
-      .post<MisskeyAPI.Entity.Relation>('/api/users/relation', {
+      .post<MisskeyAPI.Entity.Relation[]>('/api/users/relation', {
         userId: id
       })
       .then(res => {
         return Object.assign(res, {
-          data: MisskeyAPI.Converter.relation(res.data)
+          data: MisskeyAPI.Converter.relation(res.data[0])
         })
       })
   }
@@ -617,11 +617,9 @@ export default class Misskey implements MegalodonInterface {
       detail: true
     }
     if (options) {
-      if (options.resolve !== undefined) {
-        params = Object.assign(params, {
-          localOnly: options.resolve
-        })
-      }
+      params = Object.assign(params, {
+        localOnly: !options.resolve
+      })
       if (options.limit) {
         params = Object.assign(params, {
           limit: options.limit
@@ -1035,7 +1033,8 @@ export default class Misskey implements MegalodonInterface {
       visibility?: 'public' | 'unlisted' | 'private' | 'direct'
       scheduled_at?: string
       language?: string
-      quote_id?: string
+      quoted_status_id?: string
+      quote_approval_policy?: string
     }
   ): Promise<Response<Entity.Status>> {
     let params = {
@@ -1082,9 +1081,9 @@ export default class Misskey implements MegalodonInterface {
           visibility: MisskeyAPI.Converter.encodeVisibility(options.visibility)
         })
       }
-      if (options.quote_id) {
+      if (options.quoted_status_id) {
         params = Object.assign(params, {
-          renoteId: options.quote_id
+          renoteId: options.quoted_status_id
         })
       }
     }
@@ -1982,11 +1981,9 @@ export default class Misskey implements MegalodonInterface {
               offset: options.offset
             })
           }
-          if (options.resolve) {
-            params = Object.assign(params, {
-              localOnly: options.resolve
-            })
-          }
+          params = Object.assign(params, {
+            localOnly: !options.resolve
+          })
         }
         return this.client.post<Array<MisskeyAPI.Entity.UserDetail>>('/api/users/search', params).then(res => ({
           ...res,
