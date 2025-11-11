@@ -31,6 +31,7 @@ type Nodeinfo21 = {
 
 type Software = {
   name: string
+  version: string
 }
 
 type Metadata = {
@@ -38,6 +39,8 @@ type Metadata = {
     name: string
   }
 }
+
+type SupportedSNS = 'mastodon' | 'pleroma' | 'misskey'
 
 /**
  * Detect SNS type.
@@ -47,7 +50,47 @@ type Metadata = {
  * @param proxyConfig Proxy setting, or set false if don't use proxy.
  * @return SNS name.
  */
-export const detector = async (url: string): Promise<'mastodon' | 'pleroma' | 'misskey'> => {
+export const detector = async (url: string): Promise<SupportedSNS> => {
+  return (await getData(url)).compatibleSns
+}
+const getSemanticVersionNumber = (version: string): string => {
+  const match = version.match(/^(\d+\.\d+\.\d+)/)
+  if (match) {
+    return match[1]
+  } else {
+    return version
+  }
+}
+const getDataCore = async (url: string, sns: SupportedSNS, data: Nodeinfo10 | Nodeinfo20 | Nodeinfo21): Promise<GetData> => {
+  let ver = getSemanticVersionNumber(data.software.version)
+  if (sns === 'pleroma') {
+    try {
+      const res = await axios.get<{ version: string }>(`${url}/api/v1/instance`, {
+        timeout: 20000
+      })
+      ver = getSemanticVersionNumber(res.data.version)
+    } catch {
+      // ignore
+    }
+  }
+  return {
+    url: url,
+    compatibleSns: sns,
+    softwareName: data.software.name,
+    version: data.software.version,
+    semanticVersionCompatibleNumber: ver
+  }
+}
+
+type GetData = {
+  url: string
+  compatibleSns: SupportedSNS
+  softwareName: string
+  version: string
+  semanticVersionCompatibleNumber: string
+}
+
+export const getData = async (url: string): Promise<GetData> => {
   const options: AxiosRequestConfig = {
     timeout: 20000
   }
@@ -60,14 +103,14 @@ export const detector = async (url: string): Promise<'mastodon' | 'pleroma' | 'm
       const res = await axios.get<Nodeinfo10>(link.href, options)
       switch (res.data.software.name) {
         case 'akkoma':
-          return 'pleroma'
+          return getDataCore(url, 'pleroma', res.data)
         case 'mastodon':
-          return 'mastodon'
+          return getDataCore(url, 'mastodon', res.data)
         case 'pleroma':
-          return 'pleroma'
+          return getDataCore(url, 'pleroma', res.data)
         default:
           if (res.data.metadata.upstream?.name && res.data.metadata.upstream.name.toLowerCase() === 'mastodon') {
-            return 'mastodon'
+            return getDataCore(url, 'mastodon', res.data)
           }
           throw new NodeinfoError('Unknown SNS')
       }
@@ -76,14 +119,14 @@ export const detector = async (url: string): Promise<'mastodon' | 'pleroma' | 'm
       const res = await axios.get<Nodeinfo20>(link.href, options)
       switch (res.data.software.name) {
         case 'akkoma':
-          return 'pleroma'
+          return getDataCore(url, 'pleroma', res.data)
         case 'mastodon':
-          return 'mastodon'
+          return getDataCore(url, 'mastodon', res.data)
         case 'pleroma':
-          return 'pleroma'
+          return getDataCore(url, 'pleroma', res.data)
         default:
           if (res.data.metadata.upstream?.name && res.data.metadata.upstream.name.toLowerCase() === 'mastodon') {
-            return 'mastodon'
+            return getDataCore(url, 'mastodon', res.data)
           }
           throw new NodeinfoError('Unknown SNS')
       }
@@ -92,18 +135,18 @@ export const detector = async (url: string): Promise<'mastodon' | 'pleroma' | 'm
       const res = await axios.get<Nodeinfo21>(link.href, options)
       switch (res.data.software.name) {
         case 'akkoma':
-          return 'pleroma'
+          return getDataCore(url, 'pleroma', res.data)
         case 'misskey':
-          return 'misskey'
+          return getDataCore(url, 'misskey', res.data)
         case 'hometown':
-          return 'mastodon'
+          return getDataCore(url, 'mastodon', res.data)
         case 'mastodon':
-          return 'mastodon'
+          return getDataCore(url, 'mastodon', res.data)
         case 'pleroma':
-          return 'pleroma'
+          return getDataCore(url, 'pleroma', res.data)
         default:
           if (res.data.metadata.upstream?.name && res.data.metadata.upstream.name.toLowerCase() === 'mastodon') {
-            return 'mastodon'
+            return getDataCore(url, 'mastodon', res.data)
           }
           throw new NodeinfoError('Unknown SNS')
       }

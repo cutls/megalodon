@@ -7,6 +7,7 @@ This library allows for interfacing with [Mastodon](https://joinmastodon.org), [
 
 - Misskey partial support
 - One streaming with subscription
+- Delete minor SNS support
 
 ### Misskey support
 
@@ -201,7 +202,7 @@ You have to provide the server's software name (e.g. `mastodon`, `pleroma`, `mis
 But when you only know the URL and not the software the server runs on, the `detector` function can detect the server's software.
 
 ```ts
-import { detector } from 'megalodon'
+import { detector, getData } from 'megalodon'
 
 const FIRST_URL = 'https://mastodon.social'
 const SECOND_URL = 'https://misskey.io'
@@ -211,6 +212,19 @@ const second_server = await detector(MISSKEY_URL)
 
 console.log(first_server) // mastodon
 console.log(second_server) // misskey
+
+// get advanced data
+const pleroma_server = await getData("https://pleroma.io")
+console.log(pleroma_server)
+/*
+{
+  url: 'https://pleroma.io'
+  compatibleSns: 'pleroma'
+  softwareName: 'pleroma'
+  version: '2.9.1-0-g9e7be0e'
+  semanticVersionCompatibleNumber: '2.7.2' // get version of Mastodon compatible API(Misskey: the same as version with trimed as [1.1.1] style, like 2024.5.0)
+}
+*/
 ```
 
 ## License

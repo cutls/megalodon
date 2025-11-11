@@ -2,7 +2,7 @@ import Response from './response.js'
 import OAuth from './oauth.js'
 import { isCancel, RequestCanceledError } from './cancel.js'
 import generator, { MegalodonInterface, WebSocketInterface } from './megalodon.js'
-import { detector } from './detector.js'
+import { detector, getData } from './detector.js'
 import Mastodon from './mastodon.js'
 import Pleroma from './pleroma.js'
 import Misskey from './misskey.js'
@@ -17,6 +17,7 @@ export {
   RequestCanceledError,
   isCancel,
   detector,
+  getData,
   MegalodonInterface,
   WebSocketInterface,
   NotificationType,
