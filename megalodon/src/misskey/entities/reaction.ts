@@ -1,8 +1,8 @@
-import { User } from "./user.js"
+import type { User } from './user.js'
 
-  export type Reaction = {
-    id: string
-    createdAt: string
-    user: User
-    type: string
-  }
+export type Reaction = {
+	id: string
+	createdAt: string
+	user: User
+	type: string
+}

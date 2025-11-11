@@ -1,9 +1,9 @@
 export type Emoji = {
-	name: string;
-	host: string | null;
-	url: string;
-	aliases: Array<string>;
-};
+	name: string
+	host: string | null
+	url: string
+	aliases: Array<string>
+}
 export type EmojiKeyValue = {
-	[key: string]: string;
-};
+	[key: string]: string
+}

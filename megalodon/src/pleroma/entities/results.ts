@@ -1,9 +1,9 @@
-import { Account } from './account.js'
-import { Status } from './status.js'
-import { Tag } from './tag.js'
+import type { Account } from './account.js'
+import type { Status } from './status.js'
+import type { Tag } from './tag.js'
 
 export type Results = {
-  accounts: Array<Account>
-  statuses: Array<Status>
-  hashtags: Array<Tag>
+	accounts: Array<Account>
+	statuses: Array<Status>
+	hashtags: Array<Tag>
 }

@@ -1,12 +1,12 @@
-import { Account } from './account.js'
-import { Status } from './status.js'
+import type { Account } from './account.js'
+import type { Status } from './status.js'
 
 export type Notification = {
-  account: Account
-  created_at: string
-  id: string
-  status?: Status
-  type: NotificationType
+	account: Account
+	created_at: string
+	id: string
+	status?: Status
+	type: NotificationType
 }
 
 export type NotificationType = string

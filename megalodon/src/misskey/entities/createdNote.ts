@@ -1,5 +1,5 @@
-import { Note } from "./note.js"
+import type { Note } from './note.js'
 
-  export type CreatedNote = {
-    createdNote: Note
-  }
+export type CreatedNote = {
+	createdNote: Note
+}

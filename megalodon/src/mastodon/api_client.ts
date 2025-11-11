@@ -1,670 +1,662 @@
-import axios, { AxiosResponse, AxiosRequestConfig } from 'axios'
+import axios, { type AxiosResponse, type AxiosRequestConfig } from 'axios'
 import objectAssignDeep from 'object-assign-deep'
 
 import Streaming from './web_socket.js'
-import Response from '../response.js'
+import type Response from '../response.js'
 import { RequestCanceledError } from '../cancel.js'
 import { NO_REDIRECT, DEFAULT_SCOPE, DEFAULT_UA } from '../default.js'
-import MastodonEntity from './entity.js'
-import MegalodonEntity from '../entity.js'
+import type MastodonEntity from './entity.js'
+import type MegalodonEntity from '../entity.js'
 import NotificationType, { UnknownNotificationTypeError } from '../notification.js'
 import MastodonNotificationType from './notification.js'
 
 namespace MastodonAPI {
-  /**
-   * Interface
-   */
-  export interface Interface {
-    get<T = any>(path: string, params?: any, headers?: { [key: string]: string }, pathIsFullyQualified?: boolean): Promise<Response<T>>
-    put<T = any>(path: string, params?: any, headers?: { [key: string]: string }): Promise<Response<T>>
-    putForm<T = any>(path: string, params?: any, headers?: { [key: string]: string }): Promise<Response<T>>
-    patch<T = any>(path: string, params?: any, headers?: { [key: string]: string }): Promise<Response<T>>
-    patchForm<T = any>(path: string, params?: any, headers?: { [key: string]: string }): Promise<Response<T>>
-    post<T = any>(path: string, params?: any, headers?: { [key: string]: string }): Promise<Response<T>>
-    postForm<T = any>(path: string, params?: any, headers?: { [key: string]: string }): Promise<Response<T>>
-    del<T = any>(path: string, params?: any, headers?: { [key: string]: string }): Promise<Response<T>>
-    cancel(): void
-    socket(url: string, stream?: string, params?: string): Streaming
-  }
+	/**
+	 * Interface
+	 */
+	export interface Interface {
+		get<T = any>(path: string, params?: any, headers?: { [key: string]: string }, pathIsFullyQualified?: boolean): Promise<Response<T>>
+		put<T = any>(path: string, params?: any, headers?: { [key: string]: string }): Promise<Response<T>>
+		putForm<T = any>(path: string, params?: any, headers?: { [key: string]: string }): Promise<Response<T>>
+		patch<T = any>(path: string, params?: any, headers?: { [key: string]: string }): Promise<Response<T>>
+		patchForm<T = any>(path: string, params?: any, headers?: { [key: string]: string }): Promise<Response<T>>
+		post<T = any>(path: string, params?: any, headers?: { [key: string]: string }): Promise<Response<T>>
+		postForm<T = any>(path: string, params?: any, headers?: { [key: string]: string }): Promise<Response<T>>
+		del<T = any>(path: string, params?: any, headers?: { [key: string]: string }): Promise<Response<T>>
+		cancel(): void
+		socket(url: string, stream?: string, params?: string): Streaming
+	}
 
-  /**
-   * Mastodon API client.
-   *
-   * Using axios for request, you will handle promises.
-   */
-  export class Client implements Interface {
-    static DEFAULT_SCOPE = DEFAULT_SCOPE
-    static DEFAULT_URL = 'https://mastodon.social'
-    static NO_REDIRECT = NO_REDIRECT
+	/**
+	 * Mastodon API client.
+	 *
+	 * Using axios for request, you will handle promises.
+	 */
+	export class Client implements Interface {
+		static DEFAULT_SCOPE = DEFAULT_SCOPE
+		static DEFAULT_URL = 'https://mastodon.social'
+		static NO_REDIRECT = NO_REDIRECT
 
-    private accessToken: string | null
-    private baseUrl: string
-    private userAgent: string
-    private abortController: AbortController
+		private accessToken: string | null
+		private baseUrl: string
+		private userAgent: string
+		private abortController: AbortController
 
-    /**
-     * @param baseUrl hostname or base URL
-     * @param accessToken access token from OAuth2 authorization
-     * @param userAgent UserAgent is specified in header on request.
-     */
-    constructor(baseUrl: string, accessToken: string | null = null, userAgent: string = DEFAULT_UA) {
-      this.accessToken = accessToken
-      this.baseUrl = baseUrl
-      this.userAgent = userAgent
-      this.abortController = new AbortController()
-      axios.defaults.signal = this.abortController.signal
-    }
+		/**
+		 * @param baseUrl hostname or base URL
+		 * @param accessToken access token from OAuth2 authorization
+		 * @param userAgent UserAgent is specified in header on request.
+		 */
+		constructor(baseUrl: string, accessToken: string | null = null, userAgent: string = DEFAULT_UA) {
+			this.accessToken = accessToken
+			this.baseUrl = baseUrl
+			this.userAgent = userAgent
+			this.abortController = new AbortController()
+			axios.defaults.signal = this.abortController.signal
+		}
 
-    /**
-     * GET request to mastodon REST API.
-     * @param path relative path from baseUrl
-     * @param params Query parameters
-     * @param headers Request header object
-     */
-    public async get<T>(
-      path: string,
-      params = {},
-      headers: { [key: string]: string } = {},
-      pathIsFullyQualified = false
-    ): Promise<Response<T>> {
-      let options: AxiosRequestConfig = {
-        params: params,
-        headers: headers,
-        maxContentLength: Infinity,
-        maxBodyLength: Infinity
-      }
-      if (this.accessToken) {
-        options = objectAssignDeep({}, options, {
-          headers: {
-            Authorization: `Bearer ${this.accessToken}`
-          }
-        })
-      }
-      return axios
-        .get<T>((pathIsFullyQualified ? '' : this.baseUrl) + path, options)
-        .catch((err: Error) => {
-          if (axios.isCancel(err)) {
-            throw new RequestCanceledError(err.message)
-          } else {
-            throw err
-          }
-        })
-        .then((resp: AxiosResponse<T>) => {
-          const res: Response<T> = {
-            data: resp.data,
-            status: resp.status,
-            statusText: resp.statusText,
-            headers: resp.headers
-          }
-          return res
-        })
-    }
+		/**
+		 * GET request to mastodon REST API.
+		 * @param path relative path from baseUrl
+		 * @param params Query parameters
+		 * @param headers Request header object
+		 */
+		public async get<T>(path: string, params = {}, headers: { [key: string]: string } = {}, pathIsFullyQualified = false): Promise<Response<T>> {
+			let options: AxiosRequestConfig = {
+				params: params,
+				headers: headers,
+				maxContentLength: Infinity,
+				maxBodyLength: Infinity
+			}
+			if (this.accessToken) {
+				options = objectAssignDeep({}, options, {
+					headers: {
+						Authorization: `Bearer ${this.accessToken}`
+					}
+				})
+			}
+			return axios
+				.get<T>((pathIsFullyQualified ? '' : this.baseUrl) + path, options)
+				.catch((err: Error) => {
+					if (axios.isCancel(err)) {
+						throw new RequestCanceledError(err.message)
+					} else {
+						throw err
+					}
+				})
+				.then((resp: AxiosResponse<T>) => {
+					const res: Response<T> = {
+						data: resp.data,
+						status: resp.status,
+						statusText: resp.statusText,
+						headers: resp.headers
+					}
+					return res
+				})
+		}
 
-    /**
-     * PUT request to mastodon REST API.
-     * @param path relative path from baseUrl
-     * @param params Form data. If you want to post file, please use FormData()
-     * @param headers Request header object
-     */
-    public async put<T>(path: string, params = {}, headers: { [key: string]: string } = {}): Promise<Response<T>> {
-      let options: AxiosRequestConfig = {
-        headers: headers,
-        maxContentLength: Infinity,
-        maxBodyLength: Infinity
-      }
-      if (this.accessToken) {
-        options = objectAssignDeep({}, options, {
-          headers: {
-            Authorization: `Bearer ${this.accessToken}`
-          }
-        })
-      }
-      return axios
-        .put<T>(this.baseUrl + path, params, options)
-        .catch((err: Error) => {
-          if (axios.isCancel(err)) {
-            throw new RequestCanceledError(err.message)
-          } else {
-            throw err
-          }
-        })
-        .then((resp: AxiosResponse<T>) => {
-          const res: Response<T> = {
-            data: resp.data,
-            status: resp.status,
-            statusText: resp.statusText,
-            headers: resp.headers
-          }
-          return res
-        })
-    }
+		/**
+		 * PUT request to mastodon REST API.
+		 * @param path relative path from baseUrl
+		 * @param params Form data. If you want to post file, please use FormData()
+		 * @param headers Request header object
+		 */
+		public async put<T>(path: string, params = {}, headers: { [key: string]: string } = {}): Promise<Response<T>> {
+			let options: AxiosRequestConfig = {
+				headers: headers,
+				maxContentLength: Infinity,
+				maxBodyLength: Infinity
+			}
+			if (this.accessToken) {
+				options = objectAssignDeep({}, options, {
+					headers: {
+						Authorization: `Bearer ${this.accessToken}`
+					}
+				})
+			}
+			return axios
+				.put<T>(this.baseUrl + path, params, options)
+				.catch((err: Error) => {
+					if (axios.isCancel(err)) {
+						throw new RequestCanceledError(err.message)
+					} else {
+						throw err
+					}
+				})
+				.then((resp: AxiosResponse<T>) => {
+					const res: Response<T> = {
+						data: resp.data,
+						status: resp.status,
+						statusText: resp.statusText,
+						headers: resp.headers
+					}
+					return res
+				})
+		}
 
-    /**
-     * PUT request to mastodon REST API for multipart.
-     * @param path relative path from baseUrl
-     * @param params Form data. If you want to post file, please use FormData()
-     * @param headers Request header object
-     */
-    public async putForm<T>(path: string, params = {}, headers: { [key: string]: string } = {}): Promise<Response<T>> {
-      let options: AxiosRequestConfig = {
-        headers: headers,
-        maxContentLength: Infinity,
-        maxBodyLength: Infinity
-      }
-      if (this.accessToken) {
-        options = objectAssignDeep({}, options, {
-          headers: {
-            Authorization: `Bearer ${this.accessToken}`
-          }
-        })
-      }
-      return axios
-        .putForm<T>(this.baseUrl + path, params, options)
-        .catch((err: Error) => {
-          if (axios.isCancel(err)) {
-            throw new RequestCanceledError(err.message)
-          } else {
-            throw err
-          }
-        })
-        .then((resp: AxiosResponse<T>) => {
-          const res: Response<T> = {
-            data: resp.data,
-            status: resp.status,
-            statusText: resp.statusText,
-            headers: resp.headers
-          }
-          return res
-        })
-    }
+		/**
+		 * PUT request to mastodon REST API for multipart.
+		 * @param path relative path from baseUrl
+		 * @param params Form data. If you want to post file, please use FormData()
+		 * @param headers Request header object
+		 */
+		public async putForm<T>(path: string, params = {}, headers: { [key: string]: string } = {}): Promise<Response<T>> {
+			let options: AxiosRequestConfig = {
+				headers: headers,
+				maxContentLength: Infinity,
+				maxBodyLength: Infinity
+			}
+			if (this.accessToken) {
+				options = objectAssignDeep({}, options, {
+					headers: {
+						Authorization: `Bearer ${this.accessToken}`
+					}
+				})
+			}
+			return axios
+				.putForm<T>(this.baseUrl + path, params, options)
+				.catch((err: Error) => {
+					if (axios.isCancel(err)) {
+						throw new RequestCanceledError(err.message)
+					} else {
+						throw err
+					}
+				})
+				.then((resp: AxiosResponse<T>) => {
+					const res: Response<T> = {
+						data: resp.data,
+						status: resp.status,
+						statusText: resp.statusText,
+						headers: resp.headers
+					}
+					return res
+				})
+		}
 
-    /**
-     * PATCH request to mastodon REST API.
-     * @param path relative path from baseUrl
-     * @param params Form data. If you want to post file, please use FormData()
-     * @param headers Request header object
-     */
-    public async patch<T>(path: string, params = {}, headers: { [key: string]: string } = {}): Promise<Response<T>> {
-      let options: AxiosRequestConfig = {
-        headers: headers,
-        maxContentLength: Infinity,
-        maxBodyLength: Infinity
-      }
-      if (this.accessToken) {
-        options = objectAssignDeep({}, options, {
-          headers: {
-            Authorization: `Bearer ${this.accessToken}`
-          }
-        })
-      }
-      return axios
-        .patch<T>(this.baseUrl + path, params, options)
-        .catch((err: Error) => {
-          if (axios.isCancel(err)) {
-            throw new RequestCanceledError(err.message)
-          } else {
-            throw err
-          }
-        })
-        .then((resp: AxiosResponse<T>) => {
-          const res: Response<T> = {
-            data: resp.data,
-            status: resp.status,
-            statusText: resp.statusText,
-            headers: resp.headers
-          }
-          return res
-        })
-    }
+		/**
+		 * PATCH request to mastodon REST API.
+		 * @param path relative path from baseUrl
+		 * @param params Form data. If you want to post file, please use FormData()
+		 * @param headers Request header object
+		 */
+		public async patch<T>(path: string, params = {}, headers: { [key: string]: string } = {}): Promise<Response<T>> {
+			let options: AxiosRequestConfig = {
+				headers: headers,
+				maxContentLength: Infinity,
+				maxBodyLength: Infinity
+			}
+			if (this.accessToken) {
+				options = objectAssignDeep({}, options, {
+					headers: {
+						Authorization: `Bearer ${this.accessToken}`
+					}
+				})
+			}
+			return axios
+				.patch<T>(this.baseUrl + path, params, options)
+				.catch((err: Error) => {
+					if (axios.isCancel(err)) {
+						throw new RequestCanceledError(err.message)
+					} else {
+						throw err
+					}
+				})
+				.then((resp: AxiosResponse<T>) => {
+					const res: Response<T> = {
+						data: resp.data,
+						status: resp.status,
+						statusText: resp.statusText,
+						headers: resp.headers
+					}
+					return res
+				})
+		}
 
-    /**
-     * PATCH request to mastodon REST API for multipart.
-     * @param path relative path from baseUrl
-     * @param params Form data. If you want to post file, please use FormData()
-     * @param headers Request header object
-     */
-    public async patchForm<T>(path: string, params = {}, headers: { [key: string]: string } = {}): Promise<Response<T>> {
-      let options: AxiosRequestConfig = {
-        headers: headers,
-        maxContentLength: Infinity,
-        maxBodyLength: Infinity
-      }
-      if (this.accessToken) {
-        options = objectAssignDeep({}, options, {
-          headers: {
-            Authorization: `Bearer ${this.accessToken}`
-          }
-        })
-      }
-      return axios
-        .patchForm<T>(this.baseUrl + path, params, options)
-        .catch((err: Error) => {
-          if (axios.isCancel(err)) {
-            throw new RequestCanceledError(err.message)
-          } else {
-            throw err
-          }
-        })
-        .then((resp: AxiosResponse<T>) => {
-          const res: Response<T> = {
-            data: resp.data,
-            status: resp.status,
-            statusText: resp.statusText,
-            headers: resp.headers
-          }
-          return res
-        })
-    }
+		/**
+		 * PATCH request to mastodon REST API for multipart.
+		 * @param path relative path from baseUrl
+		 * @param params Form data. If you want to post file, please use FormData()
+		 * @param headers Request header object
+		 */
+		public async patchForm<T>(path: string, params = {}, headers: { [key: string]: string } = {}): Promise<Response<T>> {
+			let options: AxiosRequestConfig = {
+				headers: headers,
+				maxContentLength: Infinity,
+				maxBodyLength: Infinity
+			}
+			if (this.accessToken) {
+				options = objectAssignDeep({}, options, {
+					headers: {
+						Authorization: `Bearer ${this.accessToken}`
+					}
+				})
+			}
+			return axios
+				.patchForm<T>(this.baseUrl + path, params, options)
+				.catch((err: Error) => {
+					if (axios.isCancel(err)) {
+						throw new RequestCanceledError(err.message)
+					} else {
+						throw err
+					}
+				})
+				.then((resp: AxiosResponse<T>) => {
+					const res: Response<T> = {
+						data: resp.data,
+						status: resp.status,
+						statusText: resp.statusText,
+						headers: resp.headers
+					}
+					return res
+				})
+		}
 
-    /**
-     * POST request to mastodon REST API.
-     * @param path relative path from baseUrl
-     * @param params Form data
-     * @param headers Request header object
-     */
-    public async post<T>(path: string, params = {}, headers: { [key: string]: string } = {}): Promise<Response<T>> {
-      let options: AxiosRequestConfig = {
-        headers: headers,
-        maxContentLength: Infinity,
-        maxBodyLength: Infinity
-      }
-      if (this.accessToken) {
-        options = objectAssignDeep({}, options, {
-          headers: {
-            Authorization: `Bearer ${this.accessToken}`
-          }
-        })
-      }
-      return axios.post<T>(this.baseUrl + path, params, options).then((resp: AxiosResponse<T>) => {
-        const res: Response<T> = {
-          data: resp.data,
-          status: resp.status,
-          statusText: resp.statusText,
-          headers: resp.headers
-        }
-        return res
-      })
-    }
+		/**
+		 * POST request to mastodon REST API.
+		 * @param path relative path from baseUrl
+		 * @param params Form data
+		 * @param headers Request header object
+		 */
+		public async post<T>(path: string, params = {}, headers: { [key: string]: string } = {}): Promise<Response<T>> {
+			let options: AxiosRequestConfig = {
+				headers: headers,
+				maxContentLength: Infinity,
+				maxBodyLength: Infinity
+			}
+			if (this.accessToken) {
+				options = objectAssignDeep({}, options, {
+					headers: {
+						Authorization: `Bearer ${this.accessToken}`
+					}
+				})
+			}
+			return axios.post<T>(this.baseUrl + path, params, options).then((resp: AxiosResponse<T>) => {
+				const res: Response<T> = {
+					data: resp.data,
+					status: resp.status,
+					statusText: resp.statusText,
+					headers: resp.headers
+				}
+				return res
+			})
+		}
 
-    /**
-     * POST request to mastodon REST API for multipart.
-     * @param path relative path from baseUrl
-     * @param params Form data
-     * @param headers Request header object
-     */
-    public async postForm<T>(path: string, params = {}, headers: { [key: string]: string } = {}): Promise<Response<T>> {
-      let options: AxiosRequestConfig = {
-        headers: headers,
-        maxContentLength: Infinity,
-        maxBodyLength: Infinity
-      }
-      if (this.accessToken) {
-        options = objectAssignDeep({}, options, {
-          headers: {
-            Authorization: `Bearer ${this.accessToken}`
-          }
-        })
-      }
-      return axios.postForm<T>(this.baseUrl + path, params, options).then((resp: AxiosResponse<T>) => {
-        const res: Response<T> = {
-          data: resp.data,
-          status: resp.status,
-          statusText: resp.statusText,
-          headers: resp.headers
-        }
-        return res
-      })
-    }
+		/**
+		 * POST request to mastodon REST API for multipart.
+		 * @param path relative path from baseUrl
+		 * @param params Form data
+		 * @param headers Request header object
+		 */
+		public async postForm<T>(path: string, params = {}, headers: { [key: string]: string } = {}): Promise<Response<T>> {
+			let options: AxiosRequestConfig = {
+				headers: headers,
+				maxContentLength: Infinity,
+				maxBodyLength: Infinity
+			}
+			if (this.accessToken) {
+				options = objectAssignDeep({}, options, {
+					headers: {
+						Authorization: `Bearer ${this.accessToken}`
+					}
+				})
+			}
+			return axios.postForm<T>(this.baseUrl + path, params, options).then((resp: AxiosResponse<T>) => {
+				const res: Response<T> = {
+					data: resp.data,
+					status: resp.status,
+					statusText: resp.statusText,
+					headers: resp.headers
+				}
+				return res
+			})
+		}
 
-    /**
-     * DELETE request to mastodon REST API.
-     * @param path relative path from baseUrl
-     * @param params Form data
-     * @param headers Request header object
-     */
-    public async del<T>(path: string, params = {}, headers: { [key: string]: string } = {}): Promise<Response<T>> {
-      let options: AxiosRequestConfig = {
-        data: params,
-        headers: headers,
-        maxContentLength: Infinity,
-        maxBodyLength: Infinity
-      }
-      if (this.accessToken) {
-        options = objectAssignDeep({}, options, {
-          headers: {
-            Authorization: `Bearer ${this.accessToken}`
-          }
-        })
-      }
-      return axios
-        .delete(this.baseUrl + path, options)
-        .catch((err: Error) => {
-          if (axios.isCancel(err)) {
-            throw new RequestCanceledError(err.message)
-          } else {
-            throw err
-          }
-        })
-        .then((resp: AxiosResponse) => {
-          const res: Response<T> = {
-            data: resp.data,
-            status: resp.status,
-            statusText: resp.statusText,
-            headers: resp.headers
-          }
-          return res
-        })
-    }
+		/**
+		 * DELETE request to mastodon REST API.
+		 * @param path relative path from baseUrl
+		 * @param params Form data
+		 * @param headers Request header object
+		 */
+		public async del<T>(path: string, params = {}, headers: { [key: string]: string } = {}): Promise<Response<T>> {
+			let options: AxiosRequestConfig = {
+				data: params,
+				headers: headers,
+				maxContentLength: Infinity,
+				maxBodyLength: Infinity
+			}
+			if (this.accessToken) {
+				options = objectAssignDeep({}, options, {
+					headers: {
+						Authorization: `Bearer ${this.accessToken}`
+					}
+				})
+			}
+			return axios
+				.delete(this.baseUrl + path, options)
+				.catch((err: Error) => {
+					if (axios.isCancel(err)) {
+						throw new RequestCanceledError(err.message)
+					} else {
+						throw err
+					}
+				})
+				.then((resp: AxiosResponse) => {
+					const res: Response<T> = {
+						data: resp.data,
+						status: resp.status,
+						statusText: resp.statusText,
+						headers: resp.headers
+					}
+					return res
+				})
+		}
 
-    /**
-     * Cancel all requests in this instance.
-     * @returns void
-     */
-    public cancel() {
-      return this.abortController.abort()
-    }
+		/**
+		 * Cancel all requests in this instance.
+		 * @returns void
+		 */
+		public cancel() {
+			return this.abortController.abort()
+		}
 
-    /**
-     * Get connection and receive websocket connection for Mastodon API.
-     *
-     * @param url Streaming url.
-     * @param stream Stream name
-     * @returns WebSocket, which inherits from EventEmitter
-     */
-    public socket(url: string, stream?: string, params?: string): Streaming {
-      const streaming = new Streaming(url, stream, params, this.accessToken || '', this.userAgent)
+		/**
+		 * Get connection and receive websocket connection for Mastodon API.
+		 *
+		 * @param url Streaming url.
+		 * @param stream Stream name
+		 * @returns WebSocket, which inherits from EventEmitter
+		 */
+		public socket(url: string, stream?: string, params?: string): Streaming {
+			const streaming = new Streaming(url, stream, params, this.accessToken || '', this.userAgent)
 
-      streaming.start()
-      return streaming
-    }
-  }
+			streaming.start()
+			return streaming
+		}
+	}
 
-  export namespace Entity {
-    export type Account = MastodonEntity.Account
-    export type Activity = MastodonEntity.Activity
-    export type Announcement = MastodonEntity.Announcement
-    export type Application = MastodonEntity.Application
-    export type AsyncAttachment = MegalodonEntity.AsyncAttachment
-    export type Attachment = MastodonEntity.Attachment
-    export type Card = MastodonEntity.Card
-    export type Context = MastodonEntity.Context
-    export type Conversation = MastodonEntity.Conversation
-    export type Emoji = MastodonEntity.Emoji
-    export type FeaturedTag = MastodonEntity.FeaturedTag
-    export type Field = MastodonEntity.Field
-    export type Filter = MastodonEntity.Filter
-    export type History = MastodonEntity.History
-    export type IdentityProof = MastodonEntity.IdentityProof
-    export type Instance = MastodonEntity.Instance
-    export type List = MastodonEntity.List
-    export type Marker = MastodonEntity.Marker
-    export type Mention = MastodonEntity.Mention
-    export type Notification = MastodonEntity.Notification
-    export type Poll = MastodonEntity.Poll
-    export type PollOption = MastodonEntity.PollOption
-    export type Preferences = MastodonEntity.Preferences
-    export type PushSubscription = MastodonEntity.PushSubscription
-    export type Reaction = MastodonEntity.Reaction
-    export type Relationship = MastodonEntity.Relationship
-    export type Report = MastodonEntity.Report
-    export type Results = MastodonEntity.Results
-    export type Role = MastodonEntity.Role
-    export type ScheduledStatus = MastodonEntity.ScheduledStatus
-    export type Source = MastodonEntity.Source
-    export type Stats = MastodonEntity.Stats
-    export type Status = MastodonEntity.Status
-    export type StatusVisibility = MastodonEntity.StatusVisibility
-    export type StatusParams = MastodonEntity.StatusParams
-    export type StatusSource = MastodonEntity.StatusSource
-    export type Tag = MastodonEntity.Tag
-    export type Token = MastodonEntity.Token
-    export type URLs = MastodonEntity.URLs
-  }
+	export namespace Entity {
+		export type Account = MastodonEntity.Account
+		export type Activity = MastodonEntity.Activity
+		export type Announcement = MastodonEntity.Announcement
+		export type Application = MastodonEntity.Application
+		export type AsyncAttachment = MegalodonEntity.AsyncAttachment
+		export type Attachment = MastodonEntity.Attachment
+		export type Card = MastodonEntity.Card
+		export type Context = MastodonEntity.Context
+		export type Conversation = MastodonEntity.Conversation
+		export type Emoji = MastodonEntity.Emoji
+		export type FeaturedTag = MastodonEntity.FeaturedTag
+		export type Field = MastodonEntity.Field
+		export type Filter = MastodonEntity.Filter
+		export type History = MastodonEntity.History
+		export type IdentityProof = MastodonEntity.IdentityProof
+		export type Instance = MastodonEntity.Instance
+		export type List = MastodonEntity.List
+		export type Marker = MastodonEntity.Marker
+		export type Mention = MastodonEntity.Mention
+		export type Notification = MastodonEntity.Notification
+		export type Poll = MastodonEntity.Poll
+		export type PollOption = MastodonEntity.PollOption
+		export type Preferences = MastodonEntity.Preferences
+		export type PushSubscription = MastodonEntity.PushSubscription
+		export type Reaction = MastodonEntity.Reaction
+		export type Relationship = MastodonEntity.Relationship
+		export type Report = MastodonEntity.Report
+		export type Results = MastodonEntity.Results
+		export type Role = MastodonEntity.Role
+		export type ScheduledStatus = MastodonEntity.ScheduledStatus
+		export type Source = MastodonEntity.Source
+		export type Stats = MastodonEntity.Stats
+		export type Status = MastodonEntity.Status
+		export type StatusVisibility = MastodonEntity.StatusVisibility
+		export type StatusParams = MastodonEntity.StatusParams
+		export type StatusSource = MastodonEntity.StatusSource
+		export type Tag = MastodonEntity.Tag
+		export type Token = MastodonEntity.Token
+		export type URLs = MastodonEntity.URLs
+	}
 
-  export namespace Converter {
-    export const encodeNotificationType = (
-      t: MegalodonEntity.NotificationType
-    ): MastodonEntity.NotificationType | UnknownNotificationTypeError => {
-      switch (t) {
-        case NotificationType.Follow:
-          return MastodonNotificationType.Follow
-        case NotificationType.Favourite:
-          return MastodonNotificationType.Favourite
-        case NotificationType.Reblog:
-          return MastodonNotificationType.Reblog
-        case NotificationType.Mention:
-          return MastodonNotificationType.Mention
-        case NotificationType.FollowRequest:
-          return MastodonNotificationType.FollowRequest
-        case NotificationType.Status:
-          return MastodonNotificationType.Status
-        case NotificationType.PollExpired:
-          return MastodonNotificationType.Poll
-        case NotificationType.Update:
-          return MastodonNotificationType.Update
-        case NotificationType.Quote:
-          return MastodonNotificationType.Quote
-        case NotificationType.QuotedUpdate:
-          return MastodonNotificationType.QuotedUpdate
-        case NotificationType.AdminSignup:
-          return MastodonNotificationType.AdminSignup
-        case NotificationType.AdminReport:
-          return MastodonNotificationType.AdminReport
-        default:
-          return new UnknownNotificationTypeError()
-      }
-    }
+	export namespace Converter {
+		export const encodeNotificationType = (t: MegalodonEntity.NotificationType): MastodonEntity.NotificationType | UnknownNotificationTypeError => {
+			switch (t) {
+				case NotificationType.Follow:
+					return MastodonNotificationType.Follow
+				case NotificationType.Favourite:
+					return MastodonNotificationType.Favourite
+				case NotificationType.Reblog:
+					return MastodonNotificationType.Reblog
+				case NotificationType.Mention:
+					return MastodonNotificationType.Mention
+				case NotificationType.FollowRequest:
+					return MastodonNotificationType.FollowRequest
+				case NotificationType.Status:
+					return MastodonNotificationType.Status
+				case NotificationType.PollExpired:
+					return MastodonNotificationType.Poll
+				case NotificationType.Update:
+					return MastodonNotificationType.Update
+				case NotificationType.Quote:
+					return MastodonNotificationType.Quote
+				case NotificationType.QuotedUpdate:
+					return MastodonNotificationType.QuotedUpdate
+				case NotificationType.AdminSignup:
+					return MastodonNotificationType.AdminSignup
+				case NotificationType.AdminReport:
+					return MastodonNotificationType.AdminReport
+				default:
+					return new UnknownNotificationTypeError()
+			}
+		}
 
-    export const decodeNotificationType = (
-      t: MastodonEntity.NotificationType
-    ): MegalodonEntity.NotificationType | UnknownNotificationTypeError => {
-      switch (t) {
-        case MastodonNotificationType.Follow:
-          return NotificationType.Follow
-        case MastodonNotificationType.Favourite:
-          return NotificationType.Favourite
-        case MastodonNotificationType.Mention:
-          return NotificationType.Mention
-        case MastodonNotificationType.Reblog:
-          return NotificationType.Reblog
-        case MastodonNotificationType.FollowRequest:
-          return NotificationType.FollowRequest
-        case MastodonNotificationType.Status:
-          return NotificationType.Status
-        case MastodonNotificationType.Poll:
-          return NotificationType.PollExpired
-        case MastodonNotificationType.Update:
-          return NotificationType.Update
-        case MastodonNotificationType.Quote:
-          return NotificationType.Quote
-        case MastodonNotificationType.QuotedUpdate:
-          return NotificationType.QuotedUpdate
-        case MastodonNotificationType.AdminSignup:
-          return NotificationType.AdminSignup
-        case MastodonNotificationType.AdminReport:
-          return NotificationType.AdminReport
-        default:
-          return new UnknownNotificationTypeError()
-      }
-    }
+		export const decodeNotificationType = (t: MastodonEntity.NotificationType): MegalodonEntity.NotificationType | UnknownNotificationTypeError => {
+			switch (t) {
+				case MastodonNotificationType.Follow:
+					return NotificationType.Follow
+				case MastodonNotificationType.Favourite:
+					return NotificationType.Favourite
+				case MastodonNotificationType.Mention:
+					return NotificationType.Mention
+				case MastodonNotificationType.Reblog:
+					return NotificationType.Reblog
+				case MastodonNotificationType.FollowRequest:
+					return NotificationType.FollowRequest
+				case MastodonNotificationType.Status:
+					return NotificationType.Status
+				case MastodonNotificationType.Poll:
+					return NotificationType.PollExpired
+				case MastodonNotificationType.Update:
+					return NotificationType.Update
+				case MastodonNotificationType.Quote:
+					return NotificationType.Quote
+				case MastodonNotificationType.QuotedUpdate:
+					return NotificationType.QuotedUpdate
+				case MastodonNotificationType.AdminSignup:
+					return NotificationType.AdminSignup
+				case MastodonNotificationType.AdminReport:
+					return NotificationType.AdminReport
+				default:
+					return new UnknownNotificationTypeError()
+			}
+		}
 
-    export const visibility = (v: MastodonAPI.Entity.StatusVisibility): MegalodonEntity.StatusVisibility => {
-      switch (v) {
-        case 'public':
-          return 'public'
-        case 'unlisted':
-          return 'unlisted'
-        case 'private':
-          return 'private'
-        case 'direct':
-          return 'direct'
-      }
-    }
+		export const visibility = (v: MastodonAPI.Entity.StatusVisibility): MegalodonEntity.StatusVisibility => {
+			switch (v) {
+				case 'public':
+					return 'public'
+				case 'unlisted':
+					return 'unlisted'
+				case 'private':
+					return 'private'
+				case 'direct':
+					return 'direct'
+			}
+		}
 
-    export const encodeVisibility = (v: MegalodonEntity.StatusVisibility): MastodonAPI.Entity.StatusVisibility => {
-      switch (v) {
-        case 'public':
-          return 'public'
-        case 'unlisted':
-          return 'unlisted'
-        case 'private':
-          return 'private'
-        case 'direct':
-          return 'direct'
-        case 'local':
-          return 'public'
-      }
-    }
+		export const encodeVisibility = (v: MegalodonEntity.StatusVisibility): MastodonAPI.Entity.StatusVisibility => {
+			switch (v) {
+				case 'public':
+					return 'public'
+				case 'unlisted':
+					return 'unlisted'
+				case 'private':
+					return 'private'
+				case 'direct':
+					return 'direct'
+				case 'local':
+					return 'public'
+			}
+		}
 
-    export const account = (a: Entity.Account): MegalodonEntity.Account => a
-    export const activity = (a: Entity.Activity): MegalodonEntity.Activity => a
-    export const announcement = (a: Entity.Announcement): MegalodonEntity.Announcement => a
-    export const application = (a: Entity.Application): MegalodonEntity.Application => a
-    export const attachment = (a: Entity.Attachment): MegalodonEntity.Attachment => a
-    export const async_attachment = (a: Entity.AsyncAttachment) => {
-      if (a.url) {
-        return {
-          id: a.id,
-          type: a.type,
-          url: a.url!,
-          remote_url: a.remote_url,
-          preview_url: a.preview_url,
-          text_url: a.text_url,
-          meta: a.meta,
-          description: a.description,
-          blurhash: a.blurhash
-        } as MegalodonEntity.Attachment
-      } else {
-        return a as MegalodonEntity.AsyncAttachment
-      }
-    }
-    export const card = (c: Entity.Card): MegalodonEntity.Card => c
-    export const context = (c: Entity.Context): MegalodonEntity.Context => ({
-      ancestors: Array.isArray(c.ancestors) ? c.ancestors.map(a => status(a)) : [],
-      descendants: Array.isArray(c.descendants) ? c.descendants.map(d => status(d)) : []
-    })
-    export const conversation = (c: Entity.Conversation): MegalodonEntity.Conversation => ({
-      id: c.id,
-      accounts: Array.isArray(c.accounts) ? c.accounts.map(a => account(a)) : [],
-      last_status: c.last_status ? status(c.last_status) : null,
-      unread: c.unread
-    })
-    export const emoji = (e: Entity.Emoji): MegalodonEntity.Emoji => e
-    export const featured_tag = (e: Entity.FeaturedTag): MegalodonEntity.FeaturedTag => e
-    export const field = (f: Entity.Field): MegalodonEntity.Field => f
-    export const filter = (f: Entity.Filter): MegalodonEntity.Filter => f
-    export const history = (h: Entity.History): MegalodonEntity.History => h
-    export const identity_proof = (i: Entity.IdentityProof): MegalodonEntity.IdentityProof => i
-    export const instance = (i: Entity.Instance): MegalodonEntity.Instance => ({
-      uri: i.domain,
-      title: i.title,
-      description: i.description,
-      email: i.contact.email,
-      version: i.version,
-      thumbnail: i.thumbnail.url,
-      urls: { streaming_api: i.configuration.urls.streaming },
-      stats: { user_count: 0, status_count: 0, domain_count: 0 },
-      languages: i.languages,
-      registrations: i.registrations.enabled,
-      approval_required: i.registrations.approval_required,
-      invites_enabled: false,
-      configuration: {
-        statuses: {
-          max_characters: i.configuration.statuses.max_characters,
-          max_media_attachments: i.configuration.statuses.max_media_attachments,
-          characters_reserved_per_url: i.configuration.statuses.characters_reserved_per_url
-        },
-        polls: {
-          max_options: i.configuration.polls.max_options,
-          max_characters_per_option: i.configuration.polls.max_characters_per_option,
-          min_expiration: i.configuration.polls.min_expiration,
-          max_expiration: i.configuration.polls.max_expiration
-        }
-      },
-      contact_account: i.contact.account || undefined,
-      rules: i.rules
-    })
-    export const list = (l: Entity.List): MegalodonEntity.List => l
-    export const marker = (m: Entity.Marker | Record<never, never>): MegalodonEntity.Marker | Record<never, never> => m
-    export const mention = (m: Entity.Mention): MegalodonEntity.Mention => m
-    export const notification = (n: Entity.Notification): MegalodonEntity.Notification | UnknownNotificationTypeError => {
-      const notificationType = decodeNotificationType(n.type)
-      if (notificationType instanceof UnknownNotificationTypeError) return notificationType
-      if (n.status) {
-        return {
-          account: account(n.account),
-          created_at: n.created_at,
-          id: n.id,
-          status: status(n.status),
-          type: notificationType
-        }
-      } else {
-        return {
-          account: account(n.account),
-          created_at: n.created_at,
-          id: n.id,
-          type: notificationType
-        }
-      }
-    }
-    export const poll = (p: Entity.Poll): MegalodonEntity.Poll => p
-    export const poll_option = (p: Entity.PollOption): MegalodonEntity.PollOption => p
-    export const preferences = (p: Entity.Preferences): MegalodonEntity.Preferences => p
-    export const push_subscription = (p: Entity.PushSubscription): MegalodonEntity.PushSubscription => p
-    export const relationship = (r: Entity.Relationship): MegalodonEntity.Relationship => r
-    export const report = (r: Entity.Report): MegalodonEntity.Report => r
-    export const results = (r: Entity.Results): MegalodonEntity.Results => ({
-      accounts: Array.isArray(r.accounts) ? r.accounts.map(a => account(a)) : [],
-      statuses: Array.isArray(r.statuses) ? r.statuses.map(s => status(s)) : [],
-      hashtags: Array.isArray(r.hashtags) ? r.hashtags.map(h => tag(h)) : []
-    })
-    export const scheduled_status = (s: Entity.ScheduledStatus): MegalodonEntity.ScheduledStatus => s
-    export const source = (s: Entity.Source): MegalodonEntity.Source => s
-    export const stats = (s: Entity.Stats): MegalodonEntity.Stats => s
-    export const status = (s: Entity.Status): MegalodonEntity.Status => ({
-      id: s.id,
-      uri: s.uri,
-      url: s.url,
-      account: account(s.account),
-      in_reply_to_id: s.in_reply_to_id,
-      in_reply_to_account_id: s.in_reply_to_account_id,
-      reblog: s.reblog ? status(s.reblog) : s.quote?.quoted_status ? status(s.quote.quoted_status) : null,
-      content: s.content,
-      plain_content: null,
-      created_at: s.created_at,
-      edited_at: s.edited_at,
-      emojis: Array.isArray(s.emojis) ? s.emojis.map(e => emoji(e)) : [],
-      replies_count: s.replies_count,
-      reblogs_count: s.reblogs_count,
-      favourites_count: s.favourites_count,
-      reblogged: s.reblogged,
-      favourited: s.favourited,
-      muted: s.muted,
-      sensitive: s.sensitive,
-      spoiler_text: s.spoiler_text,
-      visibility: visibility(s.visibility),
-      media_attachments: Array.isArray(s.media_attachments) ? s.media_attachments.map(m => attachment(m)) : [],
-      mentions: Array.isArray(s.mentions) ? s.mentions.map(m => mention(m)) : [],
-      tags: s.tags,
-      card: s.card ? card(s.card) : null,
-      poll: s.poll ? poll(s.poll) : null,
-      application: s.application ? application(s.application) : null,
-      language: s.language,
-      pinned: s.pinned,
-      bookmarked: s.bookmarked ? s.bookmarked : false,
-      quote: s.quote !== undefined && s.quote !== null,
-      quote_status: s.quote?.quoted_status ? status(s.quote?.quoted_status) : null,
-      quotes_count: s.quotes_count,
-      quote_approval: s.quote_approval,
-      // Now emoji_reaction is supported only fedibird.com.
-      emoji_reactions: reaction(s.emoji_reactions || [])
-    })
-    export const status_params = (s: Entity.StatusParams): MegalodonEntity.StatusParams => s
-    export const status_source = (s: Entity.StatusSource): MegalodonEntity.StatusSource => s
-    export const tag = (t: Entity.Tag): MegalodonEntity.Tag => t
-    export const token = (t: Entity.Token): MegalodonEntity.Token => t
-    export const urls = (u: Entity.URLs): MegalodonEntity.URLs => u
-    export const reaction = (r: Array<Entity.Reaction>): Array<MegalodonEntity.Reaction> => r
-  }
+		export const account = (a: Entity.Account): MegalodonEntity.Account => a
+		export const activity = (a: Entity.Activity): MegalodonEntity.Activity => a
+		export const announcement = (a: Entity.Announcement): MegalodonEntity.Announcement => a
+		export const application = (a: Entity.Application): MegalodonEntity.Application => a
+		export const attachment = (a: Entity.Attachment): MegalodonEntity.Attachment => a
+		export const async_attachment = (a: Entity.AsyncAttachment) => {
+			if (a.url) {
+				return {
+					id: a.id,
+					type: a.type,
+					url: a.url!,
+					remote_url: a.remote_url,
+					preview_url: a.preview_url,
+					text_url: a.text_url,
+					meta: a.meta,
+					description: a.description,
+					blurhash: a.blurhash
+				} as MegalodonEntity.Attachment
+			} else {
+				return a as MegalodonEntity.AsyncAttachment
+			}
+		}
+		export const card = (c: Entity.Card): MegalodonEntity.Card => c
+		export const context = (c: Entity.Context): MegalodonEntity.Context => ({
+			ancestors: Array.isArray(c.ancestors) ? c.ancestors.map((a) => status(a)) : [],
+			descendants: Array.isArray(c.descendants) ? c.descendants.map((d) => status(d)) : []
+		})
+		export const conversation = (c: Entity.Conversation): MegalodonEntity.Conversation => ({
+			id: c.id,
+			accounts: Array.isArray(c.accounts) ? c.accounts.map((a) => account(a)) : [],
+			last_status: c.last_status ? status(c.last_status) : null,
+			unread: c.unread
+		})
+		export const emoji = (e: Entity.Emoji): MegalodonEntity.Emoji => e
+		export const featured_tag = (e: Entity.FeaturedTag): MegalodonEntity.FeaturedTag => e
+		export const field = (f: Entity.Field): MegalodonEntity.Field => f
+		export const filter = (f: Entity.Filter): MegalodonEntity.Filter => f
+		export const history = (h: Entity.History): MegalodonEntity.History => h
+		export const identity_proof = (i: Entity.IdentityProof): MegalodonEntity.IdentityProof => i
+		export const instance = (i: Entity.Instance): MegalodonEntity.Instance => ({
+			uri: i.domain,
+			title: i.title,
+			description: i.description,
+			email: i.contact.email,
+			version: i.version,
+			thumbnail: i.thumbnail.url,
+			urls: { streaming_api: i.configuration.urls.streaming },
+			stats: { user_count: 0, status_count: 0, domain_count: 0 },
+			languages: i.languages,
+			registrations: i.registrations.enabled,
+			approval_required: i.registrations.approval_required,
+			invites_enabled: false,
+			configuration: {
+				statuses: {
+					max_characters: i.configuration.statuses.max_characters,
+					max_media_attachments: i.configuration.statuses.max_media_attachments,
+					characters_reserved_per_url: i.configuration.statuses.characters_reserved_per_url
+				},
+				polls: {
+					max_options: i.configuration.polls.max_options,
+					max_characters_per_option: i.configuration.polls.max_characters_per_option,
+					min_expiration: i.configuration.polls.min_expiration,
+					max_expiration: i.configuration.polls.max_expiration
+				}
+			},
+			contact_account: i.contact.account || undefined,
+			rules: i.rules
+		})
+		export const list = (l: Entity.List): MegalodonEntity.List => l
+		export const marker = (m: Entity.Marker | Record<never, never>): MegalodonEntity.Marker | Record<never, never> => m
+		export const mention = (m: Entity.Mention): MegalodonEntity.Mention => m
+		export const notification = (n: Entity.Notification): MegalodonEntity.Notification | UnknownNotificationTypeError => {
+			const notificationType = decodeNotificationType(n.type)
+			if (notificationType instanceof UnknownNotificationTypeError) return notificationType
+			if (n.status) {
+				return {
+					account: account(n.account),
+					created_at: n.created_at,
+					id: n.id,
+					status: status(n.status),
+					type: notificationType
+				}
+			} else {
+				return {
+					account: account(n.account),
+					created_at: n.created_at,
+					id: n.id,
+					type: notificationType
+				}
+			}
+		}
+		export const poll = (p: Entity.Poll): MegalodonEntity.Poll => p
+		export const poll_option = (p: Entity.PollOption): MegalodonEntity.PollOption => p
+		export const preferences = (p: Entity.Preferences): MegalodonEntity.Preferences => p
+		export const push_subscription = (p: Entity.PushSubscription): MegalodonEntity.PushSubscription => p
+		export const relationship = (r: Entity.Relationship): MegalodonEntity.Relationship => r
+		export const report = (r: Entity.Report): MegalodonEntity.Report => r
+		export const results = (r: Entity.Results): MegalodonEntity.Results => ({
+			accounts: Array.isArray(r.accounts) ? r.accounts.map((a) => account(a)) : [],
+			statuses: Array.isArray(r.statuses) ? r.statuses.map((s) => status(s)) : [],
+			hashtags: Array.isArray(r.hashtags) ? r.hashtags.map((h) => tag(h)) : []
+		})
+		export const scheduled_status = (s: Entity.ScheduledStatus): MegalodonEntity.ScheduledStatus => s
+		export const source = (s: Entity.Source): MegalodonEntity.Source => s
+		export const stats = (s: Entity.Stats): MegalodonEntity.Stats => s
+		export const status = (s: Entity.Status): MegalodonEntity.Status => ({
+			id: s.id,
+			uri: s.uri,
+			url: s.url,
+			account: account(s.account),
+			in_reply_to_id: s.in_reply_to_id,
+			in_reply_to_account_id: s.in_reply_to_account_id,
+			reblog: s.reblog ? status(s.reblog) : s.quote?.quoted_status ? status(s.quote.quoted_status) : null,
+			content: s.content,
+			plain_content: null,
+			created_at: s.created_at,
+			edited_at: s.edited_at,
+			emojis: Array.isArray(s.emojis) ? s.emojis.map((e) => emoji(e)) : [],
+			replies_count: s.replies_count,
+			reblogs_count: s.reblogs_count,
+			favourites_count: s.favourites_count,
+			reblogged: s.reblogged,
+			favourited: s.favourited,
+			muted: s.muted,
+			sensitive: s.sensitive,
+			spoiler_text: s.spoiler_text,
+			visibility: visibility(s.visibility),
+			media_attachments: Array.isArray(s.media_attachments) ? s.media_attachments.map((m) => attachment(m)) : [],
+			mentions: Array.isArray(s.mentions) ? s.mentions.map((m) => mention(m)) : [],
+			tags: s.tags,
+			card: s.card ? card(s.card) : null,
+			poll: s.poll ? poll(s.poll) : null,
+			application: s.application ? application(s.application) : null,
+			language: s.language,
+			pinned: s.pinned,
+			bookmarked: s.bookmarked ? s.bookmarked : false,
+			quote: s.quote !== undefined && s.quote !== null,
+			quote_status: s.quote?.quoted_status ? status(s.quote?.quoted_status) : null,
+			quote_status_state: s.quote?.state,
+			quotes_count: s.quotes_count,
+			quote_approval: s.quote_approval,
+			// Now emoji_reaction is supported only fedibird.com.
+			emoji_reactions: reaction(s.emoji_reactions || [])
+		})
+		export const status_params = (s: Entity.StatusParams): MegalodonEntity.StatusParams => s
+		export const status_source = (s: Entity.StatusSource): MegalodonEntity.StatusSource => s
+		export const tag = (t: Entity.Tag): MegalodonEntity.Tag => t
+		export const token = (t: Entity.Token): MegalodonEntity.Token => t
+		export const urls = (u: Entity.URLs): MegalodonEntity.URLs => u
+		export const reaction = (r: Array<Entity.Reaction>): Array<MegalodonEntity.Reaction> => r
+	}
 }
 export default MastodonAPI

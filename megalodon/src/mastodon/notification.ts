@@ -1,18 +1,18 @@
-import MastodonEntity from './entity.js'
+import type MastodonEntity from './entity.js'
 
 namespace MastodonNotificationType {
-  export const Mention: MastodonEntity.NotificationType = 'mention'
-  export const Reblog: MastodonEntity.NotificationType = 'reblog'
-  export const Favourite: MastodonEntity.NotificationType = 'favourite'
-  export const Follow: MastodonEntity.NotificationType = 'follow'
-  export const Poll: MastodonEntity.NotificationType = 'poll'
-  export const FollowRequest: MastodonEntity.NotificationType = 'follow_request'
-  export const Status: MastodonEntity.NotificationType = 'status'
-  export const Update: MastodonEntity.NotificationType = 'update'
-  export const Quote: MastodonEntity.NotificationType = 'quote'
-  export const QuotedUpdate: MastodonEntity.NotificationType = 'quoted_update'
-  export const AdminSignup: MastodonEntity.NotificationType = 'admin.sign_up'
-  export const AdminReport: MastodonEntity.NotificationType = 'admin.report'
+	export const Mention: MastodonEntity.NotificationType = 'mention'
+	export const Reblog: MastodonEntity.NotificationType = 'reblog'
+	export const Favourite: MastodonEntity.NotificationType = 'favourite'
+	export const Follow: MastodonEntity.NotificationType = 'follow'
+	export const Poll: MastodonEntity.NotificationType = 'poll'
+	export const FollowRequest: MastodonEntity.NotificationType = 'follow_request'
+	export const Status: MastodonEntity.NotificationType = 'status'
+	export const Update: MastodonEntity.NotificationType = 'update'
+	export const Quote: MastodonEntity.NotificationType = 'quote'
+	export const QuotedUpdate: MastodonEntity.NotificationType = 'quoted_update'
+	export const AdminSignup: MastodonEntity.NotificationType = 'admin.sign_up'
+	export const AdminReport: MastodonEntity.NotificationType = 'admin.report'
 }
 
 export default MastodonNotificationType

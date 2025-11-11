@@ -1,6 +1,6 @@
-import { Status } from './status.js'
+import type { Status } from './status.js'
 
 export type Context = {
-  ancestors: Array<Status>
-  descendants: Array<Status>
+	ancestors: Array<Status>
+	descendants: Array<Status>
 }

@@ -1,4 +1,4 @@
 export type List = {
-  id: string
-  title: string
+	id: string
+	title: string
 }

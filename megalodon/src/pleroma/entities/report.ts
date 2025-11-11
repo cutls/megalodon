@@ -1,4 +1,4 @@
 export type Report = {
-  id: string
-  action_taken: boolean
+	id: string
+	action_taken: boolean
 }

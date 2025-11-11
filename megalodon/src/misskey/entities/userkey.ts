@@ -1,6 +1,6 @@
-import { User } from "./user.js";
+import type { User } from './user.js'
 
 export type UserKey = {
-	accessToken: string;
-	user: User;
-};
+	accessToken: string
+	user: User
+}
