@@ -42,8 +42,13 @@ export type Status = {
   quotes_count?: number
   quote_approval?: QuoteApproval
   quote_status?: Status | null
+  quote_status_state?: QuoteState
   bookmarked: boolean
 }
+
+type QuoteState1 = 'pending' | 'accepted' | 'rejected' | 'revoked' | 'deleted'
+type QuoteState2 = 'unauthorized' | 'blocked_account' | 'blocked_domain' | 'muted_account'
+type QuoteState = QuoteState1 | QuoteState2
 
 export type StatusTag = {
   name: string

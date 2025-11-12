@@ -1299,6 +1299,18 @@ export interface MegalodonInterface {
    * @param limit Maximum number of results to return. Defaults to 10.
    */
   getInstanceTrends(limit?: number | null): Promise<Response<Array<Entity.Tag>>>
+  /**
+   * View trending posts.
+   *
+   * @param limit Maximum number of results to return. Defaults to 10.
+   */
+  getInstanceTrendPosts(limit?: number | null): Promise<Response<Array<Entity.Status>>>
+  /**
+   * View trending users.
+   *
+   * @param limit Maximum number of results to return. Defaults to 10.
+   */
+  getInstanceTrendUsers(limit?: number | null): Promise<Response<Array<Entity.Account>>>
 
   // ======================================
   // instance/directory

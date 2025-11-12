@@ -2126,6 +2126,36 @@ export default class Misskey implements MegalodonInterface {
       .post<Array<MisskeyAPI.Entity.Hashtag>>('/api/hashtags/trend')
       .then(res => ({ ...res, data: res.data.map(h => MisskeyAPI.Converter.hashtag(h)) }))
   }
+  /**
+   * POST /api/notes/featured or /api/notes/polls/recommendation
+   */
+  public async getInstanceTrendPosts(limitRaw?: number | null): Promise<Response<Array<Entity.Status>>> {
+    const limit = Math.floor((limitRaw || 20) / 2)
+    const a = this.client
+      .post<Array<MisskeyAPI.Entity.Note>>('/api/notes/featured', { limit, allowPartial: true })
+      .then(res => ({ ...res, data: res.data.map(h => MisskeyAPI.Converter.note(h, this.baseUrlToHost(this.baseUrl))) }))
+    const b = this.client
+      .post<Array<MisskeyAPI.Entity.Note>>('/api/notes/polls/recommendation', { limit, allowPartial: true, excludeChannels: true })
+      .then(res => ({ ...res, data: res.data.map(h => MisskeyAPI.Converter.note(h, this.baseUrlToHost(this.baseUrl))) }))
+    return Promise.all([a, b]).then(results => {
+      const combined = results[0].data.concat(results[1].data)
+      return { ...results[0], data: combined }
+    })
+  }
+  /**
+   * POST /api/users
+   */
+  public async getInstanceTrendUsers(limit?: number | null): Promise<Response<Array<Entity.Account>>> {
+    return this.client
+      .post<Array<MisskeyAPI.Entity.UserDetail>>('/api/users', {
+        limit,
+        allowPartial: true,
+        origin: 'local',
+        sort: '+pv',
+        state: 'alive'
+      })
+      .then(res => ({ ...res, data: res.data.map(h => MisskeyAPI.Converter.user(h, this.baseUrlToHost(this.baseUrl))) }))
+  }
 
   // ======================================
   // instance/directory

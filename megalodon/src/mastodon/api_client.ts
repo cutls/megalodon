@@ -654,6 +654,7 @@ namespace MastodonAPI {
       bookmarked: s.bookmarked ? s.bookmarked : false,
       quote: s.quote !== undefined && s.quote !== null,
       quote_status: s.quote?.quoted_status ? status(s.quote?.quoted_status) : null,
+      quote_status_state: s.quote?.state,
       quotes_count: s.quotes_count,
       quote_approval: s.quote_approval,
       // Now emoji_reaction is supported only fedibird.com.

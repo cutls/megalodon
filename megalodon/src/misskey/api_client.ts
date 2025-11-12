@@ -628,10 +628,11 @@ namespace MisskeyAPI {
       let bodyParams = params
       if (this.accessToken) {
         if (params instanceof FormData) {
-          bodyParams.set('limit', parseInt(bodyParams.get('limit'), 10))
+          const limit = parseInt(bodyParams.get('limit'), 10)
+          if (limit) bodyParams.set('limit', limit)
           bodyParams.append('i', this.accessToken)
         } else {
-          params.limit = parseInt(params.limit, 10)
+          params.limit = parseInt(params.limit, 10) || undefined
           bodyParams = Object.assign(params, {
             i: this.accessToken
           })

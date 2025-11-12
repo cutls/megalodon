@@ -3064,6 +3064,42 @@ export default class Mastodon implements MegalodonInterface {
       })
     })
   }
+  /**
+   * GET /api/v1/trends/statuses
+   *
+   * @param limit Maximum number of results to return. Defaults to 10.
+   */
+  public async getInstanceTrendPosts(limit?: number | null): Promise<Response<Array<Entity.Status>>> {
+    let params = {}
+    if (limit) {
+      params = Object.assign(params, {
+        limit
+      })
+    }
+    return this.client.get<Array<MastodonAPI.Entity.Status>>('/api/v1/trends/statuses', params).then(res => {
+      return Object.assign(res, {
+        data: res.data.map(t => MastodonAPI.Converter.status(t))
+      })
+    })
+  }
+  /**
+   * GET /api/v2/suggestions
+   *
+   * @param limit Maximum number of results to return. Defaults to 10.
+   */
+  public async getInstanceTrendUsers(limit?: number | null): Promise<Response<Array<Entity.Account>>> {
+    let params = {}
+    if (limit) {
+      params = Object.assign(params, {
+        limit
+      })
+    }
+    return this.client.get<Array<{ account: MastodonAPI.Entity.Account }>>('/api/v2/suggestions', params).then(res => {
+      return Object.assign(res, {
+        data: res.data.map(t => MastodonAPI.Converter.account(t.account))
+      })
+    })
+  }
 
   // ======================================
   // instance/directory

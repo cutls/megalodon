@@ -3035,6 +3035,18 @@ export default class Pleroma implements MegalodonInterface {
       })
     })
   }
+  public async getInstanceTrendPosts(_limit: number): Promise<Response<Array<Entity.Status>>> {
+    return new Promise((_, reject) => {
+      const err = new NotImplementedError('Pleroma does not support this method')
+      reject(err)
+    })
+  }
+  public async getInstanceTrendUsers(_limit: number): Promise<Response<Array<Entity.Account>>> {
+    return new Promise((_, reject) => {
+      const err = new NotImplementedError('Pleroma does not support this method')
+      reject(err)
+    })
+  }
 
   // ======================================
   // instance/directory
