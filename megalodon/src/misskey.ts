@@ -1635,10 +1635,12 @@ export default class Misskey implements MegalodonInterface {
       max_id?: string
       since_id?: string
       min_id?: string
-    }
+    },
+    isAntenna?: boolean
   ): Promise<Response<Array<Entity.Status>>> {
     let params = {
-      listId: list_id,
+      listId: isAntenna ? list_id : undefined,
+      antennaId: isAntenna ? undefined : list_id,
       withFiles: false
     }
     if (options) {
@@ -1662,6 +1664,11 @@ export default class Misskey implements MegalodonInterface {
           sinceId: options.min_id
         })
       }
+    }
+    if (isAntenna) {
+      return this.client
+        .post<Array<MisskeyAPI.Entity.Note>>('/api/antennas/notes', params)
+        .then(res => ({ ...res, data: res.data.map(n => MisskeyAPI.Converter.note(n, this.baseUrlToHost(this.baseUrl))) }))
     }
     return this.client
       .post<Array<MisskeyAPI.Entity.Note>>('/api/notes/user-list-timeline', params)
@@ -1730,10 +1737,19 @@ export default class Misskey implements MegalodonInterface {
   /**
    * POST /api/users/lists/list
    */
-  public async getLists(): Promise<Response<Array<Entity.List>>> {
-    return this.client
+  public async getLists(includeAntenna?: boolean): Promise<Response<Array<Entity.List>>> {
+    const lists = this.client
       .post<Array<MisskeyAPI.Entity.List>>('/api/users/lists/list')
       .then(res => ({ ...res, data: res.data.map(l => MisskeyAPI.Converter.list(l)) }))
+    if (!includeAntenna) return lists
+    const antennas = this.client
+      .post<Array<MisskeyAPI.Entity.Antenna>>('/api/antennas/list')
+      .then(res => ({ ...res, data: res.data.map(a => MisskeyAPI.Converter.antennaToList(a)) }))
+    const [listsRes, antennasRes] = await Promise.all([lists, antennas])
+    return {
+      ...listsRes,
+      data: listsRes.data.concat(antennasRes.data)
+    }
   }
 
   /**

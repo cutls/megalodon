@@ -47,6 +47,7 @@ namespace MisskeyAPI {
     export type FollowRequest = MisskeyEntity.FollowRequest
     export type Hashtag = MisskeyEntity.Hashtag
     export type List = MisskeyEntity.List
+    export type Antenna = MisskeyEntity.Antenna
     export type Meta = MisskeyEntity.Meta
     export type Mute = MisskeyEntity.Mute
     export type Note = MisskeyEntity.Note
@@ -424,6 +425,11 @@ namespace MisskeyAPI {
     export const list = (l: Entity.List): MegalodonEntity.List => ({
       id: l.id,
       title: l.name,
+      replies_policy: null
+    })
+    export const antennaToList = (a: Entity.Antenna): MegalodonEntity.List => ({
+      id: a.id,
+      title: a.name,
       replies_policy: null
     })
 

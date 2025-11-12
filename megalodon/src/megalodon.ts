@@ -1031,7 +1031,8 @@ export interface MegalodonInterface {
       max_id?: string
       since_id?: string
       min_id?: string
-    }
+    },
+    isAntenna?: boolean
   ): Promise<Response<Array<Entity.Status>>>
   // ======================================
   // timelines/conversations
@@ -1072,7 +1073,7 @@ export interface MegalodonInterface {
    *
    * @return Array of lists.
    */
-  getLists(): Promise<Response<Array<Entity.List>>>
+  getLists(includeAntenna?: boolean): Promise<Response<Array<Entity.List>>>
   /**
    * Show a single list.
    *

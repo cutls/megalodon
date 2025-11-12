@@ -2440,7 +2440,8 @@ export default class Mastodon implements MegalodonInterface {
       max_id?: string
       since_id?: string
       min_id?: string
-    }
+    },
+    _isAntenna?: boolean
   ): Promise<Response<Array<Entity.Status>>> {
     let params = {}
     if (options) {
@@ -2551,7 +2552,7 @@ export default class Mastodon implements MegalodonInterface {
    *
    * @return Array of lists.
    */
-  public async getLists(): Promise<Response<Array<Entity.List>>> {
+  public async getLists(_includeAntenna?: boolean): Promise<Response<Array<Entity.List>>> {
     return this.client.get<Array<MastodonAPI.Entity.List>>('/api/v1/lists').then(res => {
       return Object.assign(res, {
         data: res.data.map(l => MastodonAPI.Converter.list(l))
