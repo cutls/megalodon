@@ -663,7 +663,7 @@ namespace MastodonAPI {
             ? status(s.quote.quoted_status)
             : null
         : null,
-      quote_status_state: s.quote ? (isStatusForQuoteGuard(s.quote) ? undefined : s.quote.state) : undefined,
+      quote_status_state: s.quote ? (isStatusForQuoteGuard(s.quote) ? 'accepted' : s.quote.state) : undefined,
       quotes_count: s.quotes_count,
       quote_approval: s.quote_approval,
       // Now emoji_reaction is supported only fedibird.com.

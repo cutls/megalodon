@@ -1639,8 +1639,8 @@ export default class Misskey implements MegalodonInterface {
     isAntenna?: boolean
   ): Promise<Response<Array<Entity.Status>>> {
     let params = {
-      listId: isAntenna ? list_id : undefined,
-      antennaId: isAntenna ? undefined : list_id,
+      listId: isAntenna ? undefined : list_id,
+      antennaId: isAntenna ? list_id : undefined,
       withFiles: false
     }
     if (options) {
