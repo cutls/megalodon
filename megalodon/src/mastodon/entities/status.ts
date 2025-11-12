@@ -38,10 +38,7 @@ export type Status = {
   bookmarked?: boolean
   // 4.5.0
   quotes_count?: number
-  quote?: {
-    quoted_status: Status | null
-    state: 'accepted' | 'pending' | 'revoked'
-  }
+  quote?: Status | MastodonQuoteStatus | null
   quote_approval?: QuoteApproval
   // These parameters are unique parameters in fedibird.com for quote.
   quote_id?: string
@@ -50,6 +47,10 @@ export type Status = {
   emoji_reactions_count?: number
 }
 
+type MastodonQuoteStatus = {
+  quoted_status: Status | null
+  state: 'accepted' | 'pending' | 'revoked'
+}
 type QuoteApprovalPolicy = 'public' | 'followers' | 'following' | 'unsupported_policy'
 export type QuoteApproval = {
   automatic: QuoteApprovalPolicy[]

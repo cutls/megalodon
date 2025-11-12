@@ -621,6 +621,9 @@ namespace MastodonAPI {
     export const scheduled_status = (s: Entity.ScheduledStatus): MegalodonEntity.ScheduledStatus => s
     export const source = (s: Entity.Source): MegalodonEntity.Source => s
     export const stats = (s: Entity.Stats): MegalodonEntity.Stats => s
+    const isStatusForQuoteGuard = (s: Entity.Status['quote']): s is Entity.Status => {
+      return (s as Entity.Status).id !== undefined
+    }
     export const status = (s: Entity.Status): MegalodonEntity.Status => ({
       id: s.id,
       uri: s.uri,
@@ -628,7 +631,7 @@ namespace MastodonAPI {
       account: account(s.account),
       in_reply_to_id: s.in_reply_to_id,
       in_reply_to_account_id: s.in_reply_to_account_id,
-      reblog: s.reblog ? status(s.reblog) : s.quote?.quoted_status ? status(s.quote.quoted_status) : null,
+      reblog: s.reblog ? status(s.reblog) : null,
       content: s.content,
       plain_content: null,
       created_at: s.created_at,
@@ -653,8 +656,14 @@ namespace MastodonAPI {
       pinned: s.pinned,
       bookmarked: s.bookmarked ? s.bookmarked : false,
       quote: s.quote !== undefined && s.quote !== null,
-      quote_status: s.quote?.quoted_status ? status(s.quote?.quoted_status) : null,
-      quote_status_state: s.quote?.state,
+      quote_status: s.quote
+        ? isStatusForQuoteGuard(s.quote)
+          ? status(s.quote)
+          : s.quote.quoted_status
+            ? status(s.quote.quoted_status)
+            : null
+        : null,
+      quote_status_state: s.quote ? (isStatusForQuoteGuard(s.quote) ? undefined : s.quote.state) : undefined,
       quotes_count: s.quotes_count,
       quote_approval: s.quote_approval,
       // Now emoji_reaction is supported only fedibird.com.
