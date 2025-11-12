@@ -430,7 +430,8 @@ namespace MisskeyAPI {
     export const antennaToList = (a: Entity.Antenna): MegalodonEntity.List => ({
       id: a.id,
       title: a.name,
-      replies_policy: null
+      replies_policy: null,
+      is_misskey_antenna: true
     })
 
     export const encodeNotificationType = (e: MegalodonEntity.NotificationType): MisskeyEntity.NotificationType => {
