@@ -124,6 +124,8 @@ export const getData = async (url: string): Promise<GetData> => {
           return getDataCore(url, 'mastodon', res.data)
         case 'pleroma':
           return getDataCore(url, 'pleroma', res.data)
+        case 'sharkey':
+          return getDataCore(url, 'pleroma', res.data)
         default:
           if (res.data.metadata.upstream?.name && res.data.metadata.upstream.name.toLowerCase() === 'mastodon') {
             return getDataCore(url, 'mastodon', res.data)
@@ -143,6 +145,8 @@ export const getData = async (url: string): Promise<GetData> => {
         case 'mastodon':
           return getDataCore(url, 'mastodon', res.data)
         case 'pleroma':
+          return getDataCore(url, 'pleroma', res.data)
+        case 'sharkey':
           return getDataCore(url, 'pleroma', res.data)
         default:
           if (res.data.metadata.upstream?.name && res.data.metadata.upstream.name.toLowerCase() === 'mastodon') {
