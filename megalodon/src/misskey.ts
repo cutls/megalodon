@@ -783,9 +783,17 @@ export default class Misskey implements MegalodonInterface {
   // accounts/filters
   // ======================================
   public async getFilters(): Promise<Response<Array<Entity.Filter>>> {
-    return new Promise((_, reject) => {
-      const err = new NotImplementedError('misskey does not support')
-      reject(err)
+    return this.client.post<MisskeyAPI.Entity.UserDetail>('/api/i', { scope: ['client', 'base'] }).then(res => {
+      return Object.assign(res, {
+        data: res.data.mutedWords.map(f => ({
+          id: f.join('_'),
+          phrase: f.join(' '),
+          context: ['home', 'notifications', 'public', 'thread'],
+          expires_at: null,
+          irreversible: false,
+          whole_word: false
+        }))
+      })
     })
   }
 
