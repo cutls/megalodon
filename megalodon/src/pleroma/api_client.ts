@@ -380,6 +380,7 @@ namespace PleromaAPI {
       muting: r.muting,
       muting_notifications: r.muting_notifications,
       requested: r.requested,
+      requested_by: false,
       domain_blocking: r.domain_blocking,
       showing_reblogs: r.showing_reblogs,
       endorsed: r.endorsed,

@@ -238,6 +238,7 @@ namespace MisskeyAPI {
         muting: r.isMuted,
         muting_notifications: false,
         requested: r.hasPendingFollowRequestFromYou,
+        requested_by: r.hasPendingFollowRequestToYou,
         domain_blocking: false,
         showing_reblogs: true,
         endorsed: false,
