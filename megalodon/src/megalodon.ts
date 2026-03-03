@@ -998,6 +998,21 @@ export interface MegalodonInterface {
     }
   ): Promise<Response<Array<Entity.Status>>>
   /**
+   * View home and local integrated timeline.
+   *
+   * @param options.limit Max number of results to return. Defaults to 20.
+   * @param options.max_id Return results older than ID.
+   * @param options.since_id Return results newer than ID.
+   * @param options.min_id Return results immediately newer than ID.
+   * @return Array of statuses.
+   */
+  getIntegratedTimeline(options?: {
+    limit?: number
+    max_id?: string
+    since_id?: string
+    min_id?: string
+  }): Promise<Response<Array<Entity.Status>>>
+  /**
    * View home timeline.
    *
    * @param options.local Show only local statuses? Defaults to false.

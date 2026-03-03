@@ -11,6 +11,7 @@ import { NO_REDIRECT, DEFAULT_SCOPE, DEFAULT_UA } from './default.js'
 import OAuth from './oauth.js'
 import * as PleromaOAuth from './pleroma/oauth.js'
 import { UnknownNotificationTypeError } from './notification.js'
+import dayjs from 'dayjs'
 
 export default class Pleroma implements MegalodonInterface {
   public client: PleromaAPI.Interface
@@ -2320,6 +2321,55 @@ export default class Pleroma implements MegalodonInterface {
       return Object.assign(res, {
         data: res.data.map(s => PleromaAPI.Converter.status(s))
       })
+    })
+  }
+  /**
+   * GET /api/v1/timelines/home & /public?local=true
+   *
+   * @param options.limit Max number of results to return. Defaults to 20.
+   * @param options.max_id Return results older than ID.
+   * @param options.since_id Return results newer than ID.
+   * @param options.min_id Return results immediately newer than ID.
+   * @return Array of statuses.
+   */
+  public async getIntegratedTimeline(options?: {
+    limit?: number
+    max_id?: string
+    since_id?: string
+    min_id?: string
+  }): Promise<Response<Array<Entity.Status>>> {
+    let params = {}
+    if (options) {
+      if (options.max_id) {
+        params = Object.assign(params, {
+          max_id: options.max_id
+        })
+      }
+      if (options.since_id) {
+        params = Object.assign(params, {
+          since_id: options.since_id
+        })
+      }
+      if (options.min_id) {
+        params = Object.assign(params, {
+          min_id: options.min_id
+        })
+      }
+      if (options.limit) {
+        params = Object.assign(params, {
+          limit: options.limit
+        })
+      }
+    }
+    const home = await this.client.get<Array<PleromaAPI.Entity.Status>>('/api/v1/timelines/home', params)
+    const local = await this.client.get<Array<PleromaAPI.Entity.Status>>('/api/v1/timelines/public', Object.assign(params, { local: true }))
+    const merged = home.data.concat(local.data)
+    merged.sort((a, b) => {
+      return dayjs(b.created_at).diff(dayjs(a.created_at))
+    })
+    const sliced = merged.slice(0, options && options.limit ? options.limit : 20).map(s => PleromaAPI.Converter.status(s))
+    return Object.assign(home, {
+      data: sliced
     })
   }
 

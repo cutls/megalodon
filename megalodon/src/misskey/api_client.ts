@@ -264,6 +264,7 @@ namespace MisskeyAPI {
         expired: now.isAfter(expire),
         multiple: p.multiple,
         votes_count: count,
+        voters_count: count,
         options: p.choices.map(c => choice(c)),
         voted: p.choices.some(c => c.isVoted)
       }

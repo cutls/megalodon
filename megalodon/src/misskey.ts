@@ -1592,6 +1592,45 @@ export default class Misskey implements MegalodonInterface {
       .post<Array<MisskeyAPI.Entity.Note>>('/api/notes/search-by-tag', params)
       .then(res => ({ ...res, data: res.data.map(n => MisskeyAPI.Converter.note(n, this.baseUrlToHost(this.baseUrl))) }))
   }
+  /**
+   * POST /api/notes/timeline & POST /api/notes/local-timeline
+   */
+  public async getIntegratedTimeline(options?: {
+    limit?: number
+    max_id?: string
+    since_id?: string
+    min_id?: string
+  }): Promise<Response<Array<Entity.Status>>> {
+    let params = {
+      withFiles: false
+    }
+    if (options) {
+      if (options.limit) {
+        params = Object.assign(params, {
+          limit: options.limit
+        })
+      }
+      if (options.max_id) {
+        params = Object.assign(params, {
+          untilId: options.max_id
+        })
+      }
+      if (options.since_id) {
+        params = Object.assign(params, {
+          sinceId: options.since_id
+        })
+      }
+      if (options.min_id) {
+        params = Object.assign(params, {
+          sinceId: options.min_id
+        })
+      }
+    }
+    const home = await this.client.post<Array<MisskeyAPI.Entity.Note>>('/api/notes/timeline', params)
+    const local = await this.client.post<Array<MisskeyAPI.Entity.Note>>('/api/notes/local-timeline', params)
+    const merged = [...home.data, ...local.data].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    return { ...home, data: merged.map(n => MisskeyAPI.Converter.note(n, this.baseUrlToHost(this.baseUrl))) }
+  }
 
   /**
    * POST /api/notes/timeline
