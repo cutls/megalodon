@@ -667,7 +667,8 @@ namespace MastodonAPI {
       quotes_count: s.quotes_count,
       quote_approval: s.quote_approval,
       // Now emoji_reaction is supported only fedibird.com.
-      emoji_reactions: reaction(s.emoji_reactions || [])
+      emoji_reactions: reaction(s.emoji_reactions || []),
+      _integrated_isLocal: s._integrated_isLocal
     })
     export const status_params = (s: Entity.StatusParams): MegalodonEntity.StatusParams => s
     export const status_source = (s: Entity.StatusSource): MegalodonEntity.StatusSource => s

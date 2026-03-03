@@ -28,4 +28,5 @@ import { File } from "./file.js"
     mentions?: Array<string>
     myReaction?: string,
     reactionEmojis?: EmojiKeyValue
+    _integrated_isLocal?: boolean
   }

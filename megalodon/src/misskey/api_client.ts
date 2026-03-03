@@ -317,7 +317,8 @@ namespace MisskeyAPI {
         emoji_reactions: mapReactions(host, n.reactions, n.myReaction || '', n.reactionEmojis || {}),
         bookmarked: false,
         quote: !!(n.renote && n.text),
-        quote_status: n.renote && n.text ? note(n.renote, host) : null
+        quote_status: n.renote && n.text ? note(n.renote, host) : null,
+        _integrated_isLocal: n._integrated_isLocal || false
       }
     }
     export const mapReactions = (

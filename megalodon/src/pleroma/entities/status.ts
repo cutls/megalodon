@@ -55,6 +55,8 @@ export type Status = {
     pinned_at?: string
     thread_muted?: boolean
   }
+  // for integrated timeline
+  _integrated_isLocal?: boolean
 }
 
 export type StatusTag = {

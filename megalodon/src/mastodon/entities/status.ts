@@ -45,6 +45,8 @@ export type Status = {
   emoji_reactioned?: boolean
   emoji_reactions?: Array<Reaction>
   emoji_reactions_count?: number
+  // This parameter is used for integrated timeline.
+  _integrated_isLocal?: boolean
 }
 
 type MastodonQuoteStatus = {
