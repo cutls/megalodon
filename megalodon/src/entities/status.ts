@@ -44,6 +44,7 @@ export type Status = {
   quote_status?: Status | null
   quote_status_state?: QuoteState
   bookmarked: boolean
+  _integrated_isLocal?: boolean
 }
 
 type QuoteState1 = 'pending' | 'accepted' | 'rejected' | 'revoked' | 'deleted'

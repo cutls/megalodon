@@ -1628,7 +1628,9 @@ export default class Misskey implements MegalodonInterface {
     }
     const home = await this.client.post<Array<MisskeyAPI.Entity.Note>>('/api/notes/timeline', params)
     const local = await this.client.post<Array<MisskeyAPI.Entity.Note>>('/api/notes/local-timeline', params)
-    const merged = [...home.data, ...local.data].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    const merged = [...home.data, ...local.data.map(s => ({ ...s, _integrated_isLocal: true }))].sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    )
     return { ...home, data: merged.map(n => MisskeyAPI.Converter.note(n, this.baseUrlToHost(this.baseUrl))) }
   }
 

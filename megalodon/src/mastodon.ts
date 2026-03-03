@@ -2413,7 +2413,7 @@ export default class Mastodon implements MegalodonInterface {
       '/api/v1/timelines/public',
       Object.assign(params, { local: true })
     )
-    const merged = home.data.concat(local.data)
+    const merged = home.data.concat(local.data.map(s => ({ ...s, _integrated_isLocal: true })))
     merged.sort((a, b) => {
       return dayjs(b.created_at).diff(dayjs(a.created_at))
     })
