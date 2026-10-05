@@ -2364,10 +2364,11 @@ export default class Pleroma implements MegalodonInterface {
     const home = await this.client.get<Array<PleromaAPI.Entity.Status>>('/api/v1/timelines/home', params)
     const local = await this.client.get<Array<PleromaAPI.Entity.Status>>('/api/v1/timelines/public', Object.assign(params, { local: true }))
     const merged = home.data.concat(local.data.map(s => ({ ...s, _integrated_isLocal: true })))
-    merged.sort((a, b) => {
+    const uniqueData = Array.from(new Map(merged.map(item => [item.id, item])).values())
+    uniqueData.sort((a, b) => {
       return dayjs(b.created_at).diff(dayjs(a.created_at))
     })
-    const sliced = merged.slice(0, options && options.limit ? options.limit : 20).map(s => PleromaAPI.Converter.status(s))
+    const sliced = uniqueData.slice(0, options && options.limit ? options.limit : 20).map(s => PleromaAPI.Converter.status(s))
     return Object.assign(home, {
       data: sliced
     })

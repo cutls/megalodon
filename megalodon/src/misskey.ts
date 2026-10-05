@@ -1631,7 +1631,8 @@ export default class Misskey implements MegalodonInterface {
     const merged = [...home.data, ...local.data.map(s => ({ ...s, _integrated_isLocal: true }))].sort(
       (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     )
-    return { ...home, data: merged.map(n => MisskeyAPI.Converter.note(n, this.baseUrlToHost(this.baseUrl))) }
+    const uniqueData = Array.from(new Map(merged.map(item => [item.id, item])).values())
+    return { ...home, data: uniqueData.map(n => MisskeyAPI.Converter.note(n, this.baseUrlToHost(this.baseUrl))) }
   }
 
   /**

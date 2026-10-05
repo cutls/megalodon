@@ -40,7 +40,7 @@ export const getData = async (url: string): Promise<GetData> => {
 
     if (res.data.version) {
       const ver = getSemanticVersionNumber(res.data.version)
-      if (ver !== res.data.version) {
+      if (res.data.version.match(/pleroma/i)) {
         return {
           url: url,
           compatibleSns: 'pleroma',
